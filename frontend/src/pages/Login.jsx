@@ -1,0 +1,160 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { Zap, Mail, Lock, ArrowRight, AlertCircle, User, UserPlus } from 'lucide-react';
+import './Login.css';
+
+const Login = () => {
+  const [isRegister, setIsRegister] = useState(false);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('admin@smartcity.com');
+  const [password, setPassword] = useState('admin123');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { login, register } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      if (isRegister) {
+        await register(name, email, password);
+      } else {
+        await login(email, password);
+      }
+      navigate('/');
+    } catch (err) {
+      setError(err.response?.data?.message || (isRegister ? 'Registration failed.' : 'Login failed.'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const switchMode = () => {
+    setIsRegister(!isRegister);
+    setError('');
+    if (!isRegister) {
+      setEmail('');
+      setPassword('');
+      setName('');
+    } else {
+      setEmail('admin@smartcity.com');
+      setPassword('admin123');
+    }
+  };
+
+  return (
+    <div className="login-page">
+      <div className="login-bg-effects">
+        <div className="bg-orb bg-orb-1" />
+        <div className="bg-orb bg-orb-2" />
+        <div className="bg-orb bg-orb-3" />
+        <div className="grid-overlay" />
+      </div>
+
+      <div className="login-card animate-fade-in">
+        <div className="login-brand">
+          <div className="brand-icon">
+            <Zap size={28} />
+          </div>
+          <h1>SmartCity</h1>
+          <p>Command & Control Platform</p>
+        </div>
+
+        {/* Toggle tabs */}
+        <div className="auth-tabs">
+          <button className={`auth-tab ${!isRegister ? 'active' : ''}`} onClick={() => switchMode()}>
+            <ArrowRight size={14} /> Sign In
+          </button>
+          <button className={`auth-tab ${isRegister ? 'active' : ''}`} onClick={() => switchMode()}>
+            <UserPlus size={14} /> Register
+          </button>
+        </div>
+
+        {error && (
+          <div className="login-error">
+            <AlertCircle size={16} />
+            <span>{error}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="login-form">
+          {isRegister && (
+            <div className="form-field">
+              <label>Full Name</label>
+              <div className="field-input">
+                <User size={16} />
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter your full name"
+                  required
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="form-field">
+            <label>Email Address</label>
+            <div className="field-input">
+              <Mail size={16} />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="form-field">
+            <label>Password</label>
+            <div className="field-input">
+              <Lock size={16} />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                required
+                minLength={6}
+              />
+            </div>
+          </div>
+
+          <button type="submit" className="login-btn" disabled={loading}>
+            {loading ? (
+              <span className="spinner" style={{ width: 18, height: 18 }} />
+            ) : (
+              <>
+                <span>{isRegister ? 'Create Account' : 'Sign In'}</span>
+                <ArrowRight size={16} />
+              </>
+            )}
+          </button>
+        </form>
+
+        {isRegister && (
+          <div className="register-note">
+            <p>Registering as a <strong>Citizen</strong> allows you to file and track complaints.</p>
+          </div>
+        )}
+
+        {!isRegister && (
+          <div className="login-credentials">
+            <span className="cred-title">Demo Credentials</span>
+            <div className="cred-item"><strong>Admin:</strong> admin@smartcity.com / admin123</div>
+            <div className="cred-item"><strong>Operator:</strong> traffic@smartcity.com / operator123</div>
+            <div className="cred-item"><strong>Citizen:</strong> rahul@citizen.com / citizen123</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Login;
