@@ -18,11 +18,13 @@
 ## Core Capabilities
 
 ### Governance and Workflows
+
 - Secure authentication with JWT.
 - Role-restricted modules and actions.
 - Activity logs for auditability and accountability.
 
 ### Civic Operations
+
 - Traffic monitoring and incident support.
 - Waste collection operations and route intelligence.
 - Water system monitoring and analytics.
@@ -30,6 +32,7 @@
 - Emergency and incident management with alerting.
 
 ### Citizen Experience
+
 - Citizen complaint filing and status tracking.
 - Guided support through chat assistant.
 - Public announcement feed and city alerts.
@@ -55,6 +58,7 @@ MongoDB (Mongoose Models)
 ## Quick Start
 
 ### 1. Prerequisites
+
 - Node.js 18+
 - MongoDB local or Atlas URI
 
@@ -105,22 +109,26 @@ npm run dev
 ```
 
 App URLs:
+
 - Frontend: http://localhost:5173
 - Backend API: http://localhost:5000/api
 
 ## Demo Credentials
 
 Admin:
+
 - Email: `admin@smartcity.com`
 - Password: `admin123`
 
 Operators:
+
 - `traffic@smartcity.com` / `operator123`
 - `waste@smartcity.com` / `operator123`
 - `water@smartcity.com` / `operator123`
 - `emergency@smartcity.com` / `operator123`
 
 Citizens:
+
 - `rahul@citizen.com` / `citizen123`
 - `priya@citizen.com` / `citizen123`
 
