@@ -517,3 +517,222 @@ button {
   margin-bottom: 1rem;
   opacity: 0.4;
 }
+
+/* ═══════════════════════════════════════
+   TOAST NOTIFICATIONS
+   ═══════════════════════════════════════ */
+.toast-container {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-width: 380px;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1.25rem;
+  border-radius: var(--radius-md);
+  backdrop-filter: blur(16px);
+  cursor: pointer;
+  animation: toastSlideIn 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+.toast-success {
+  background: rgba(16,185,129,0.15);
+  border: 1px solid rgba(16,185,129,0.3);
+  color: #10b981;
+}
+
+.toast-error {
+  background: rgba(239,68,68,0.15);
+  border: 1px solid rgba(239,68,68,0.3);
+  color: #ef4444;
+}
+
+.toast-info {
+  background: rgba(59,130,246,0.15);
+  border: 1px solid rgba(59,130,246,0.3);
+  color: #3b82f6;
+}
+
+.toast-warning {
+  background: rgba(245,158,11,0.15);
+  border: 1px solid rgba(245,158,11,0.3);
+  color: #f59e0b;
+}
+
+.toast-icon {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.toast-message {
+  color: var(--text-primary);
+}
+
+@keyframes toastSlideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* ═══════════════════════════════════════
+   SLA ESCALATION VISUAL SYSTEM
+   ═══════════════════════════════════════ */
+
+/* Priority border colors on complaint cards */
+.priority-border-high {
+  border-left: 4px solid #ef4444 !important;
+}
+
+.priority-border-medium {
+  border-left: 4px solid #f59e0b !important;
+}
+
+.priority-border-low {
+  border-left: 4px solid #10b981 !important;
+}
+
+/* Overdue card — red glow + blink animation */
+.overdue-card {
+  border-color: rgba(239,68,68,0.3) !important;
+  box-shadow: 0 0 16px rgba(239,68,68,0.12) !important;
+  animation: overdueGlow 2s ease-in-out infinite;
+}
+
+@keyframes overdueGlow {
+  0%, 100% { box-shadow: 0 0 16px rgba(239,68,68,0.1); }
+  50% { box-shadow: 0 0 28px rgba(239,68,68,0.25); }
+}
+
+/* Critical blinking card */
+.critical-blink {
+  animation: criticalPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes criticalPulse {
+  0%, 100% { border-color: rgba(239,68,68,0.2); }
+  50% { border-color: rgba(239,68,68,0.6); box-shadow: 0 0 24px rgba(239,68,68,0.2); }
+}
+
+/* Escalated badge */
+.badge-escalated {
+  background: linear-gradient(135deg, rgba(239,68,68,0.2), rgba(245,158,11,0.2));
+  color: #ff6b6b;
+  animation: pulse-badge 1.5s infinite;
+  font-weight: 700;
+}
+
+/* ═══════════════════════════════════════
+   SKELETON LOADING STATES
+   ═══════════════════════════════════════ */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-surface) 25%,
+    var(--bg-card-hover) 50%,
+    var(--bg-surface) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s linear infinite;
+  border-radius: var(--radius-sm);
+}
+
+.skeleton-card {
+  height: 120px;
+  border-radius: var(--radius-lg);
+}
+
+.skeleton-line {
+  height: 14px;
+  margin-bottom: 0.5rem;
+  width: 80%;
+}
+
+.skeleton-line.short { width: 45%; }
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ═══════════════════════════════════════
+   ENHANCED MICRO-INTERACTIONS
+   ═══════════════════════════════════════ */
+
+/* Smooth button hover lift */
+.btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(rgba(255,255,255,0.1), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.btn:hover::after {
+  opacity: 1;
+}
+
+/* Active press effect */
+.btn:active {
+  transform: scale(0.97);
+}
+
+/* Hover glow on cards */
+.card {
+  position: relative;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(139,92,246,0.1));
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: -1;
+}
+
+.card:hover::before {
+  opacity: 1;
+}
+
+/* Page transitions */
+.animate-fade-in {
+  animation: fadeInUp 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Spinning icon for refresh buttons */
+.spin-icon {
+  animation: spin 0.8s linear infinite;
+}
+
+/* Margin utility */
+.mb-1 { margin-bottom: 1.25rem; }
+
+/* Smooth scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--bg-card) transparent;
+}
+

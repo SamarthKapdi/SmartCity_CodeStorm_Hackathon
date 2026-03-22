@@ -1,6 +1,9 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const http = require('http');
+const socketUtils = require('./utils/socket');
+const rateLimit = require('express-rate-limit');
 const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
 
@@ -20,8 +23,16 @@ const announcementRoutes = require('./routes/announcements');
 
 const app = express();
 
+// Advanced Rate Limiting
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200, 
+  message: { success: false, message: 'Too many requests. Please try again later.' }
+});
+
 // Middleware
 app.use(cors());
+app.use('/api', apiLimiter);
 app.use(express.json({ limit: '10mb' }));
 
 // Connect to database
@@ -50,8 +61,13 @@ app.get('/api/health', (req, res) => {
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`\n🏙️  Smart City Backend running on port ${PORT}`);
+
+// Connect Socket.io to the HTTP Server for Real-Time Event Dispatch
+const server = http.createServer(app);
+socketUtils.init(server);
+
+server.listen(PORT, () => {
+  console.log(`\n🏙️  Smart City Backend running on port ${PORT} [WebSockets Supported]`);
   console.log(`📡 API Base URL: http://localhost:${PORT}/api`);
   console.log(`❤️  Health Check: http://localhost:${PORT}/api/health\n`);
 });

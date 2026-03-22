@@ -10,20 +10,6 @@ const auth = async (req, res, next) => {
 
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
-    // --- OFFLINE DB BYPASS ---
-    const mongoose = require('mongoose');
-    if (mongoose.connection.readyState !== 1 && decoded.isOffline) {
-      req.user = {
-        id: decoded.id,
-        name: decoded.name || 'Offline User',
-        email: decoded.email || 'offline@smartcity.com',
-        role: decoded.role || 'admin',
-        department: decoded.department || 'general'
-      };
-      return next();
-    }
-    // -------------------------
 
     const user = await User.findById(decoded.id);
     if (!user || !user.isActive) {

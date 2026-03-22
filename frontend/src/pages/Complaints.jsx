@@ -1,9 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { complaintAPI, authAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import socketService from '../services/socket';
+import AIInsights from '../components/AIInsights';
 import {
   MessageSquare, MapPin, Clock, User, RefreshCw, Plus, X,
-  CheckCircle, AlertTriangle, ArrowRight, Timer, Award, Zap
+  CheckCircle, AlertTriangle, ArrowRight, Timer, Award, Zap, Brain
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -28,9 +31,10 @@ const Complaints = () => {
   const [form, setForm] = useState({ title: '', description: '', category: 'traffic', location: '', zone: 'central' });
   const [assignForm, setAssignForm] = useState({ assignedTo: '', priority: 'medium', deadline: '' });
   const [statusForm, setStatusForm] = useState({ status: '', remark: '' });
-  const { isAdmin, isOperator, isUser } = useAuth();
+  const { isAdmin, isOperator, isUser, user } = useAuth();
+  const toast = useToast();
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const params = {};
       if (filter.status) params.status = filter.status;
@@ -49,7 +53,44 @@ const Complaints = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter, isAdmin]);
+
+  // WebSocket real-time listeners
+  useEffect(() => {
+    socketService.connect();
+    if (user?.id) socketService.joinRoom(user.id);
+    if (user?.role) socketService.joinRoom(user.role);
+    if (user?.department) socketService.joinRoom(user.department);
+
+    const onCreated = (data) => {
+      toast.info(`📝 New complaint: ${data?.title || 'New complaint filed'}`);
+      fetchData();
+    };
+    const onAssigned = (data) => {
+      toast.success(`✅ Complaint assigned: ${data?.title || 'A complaint was assigned'}`);
+      fetchData();
+    };
+    const onUpdated = (data) => {
+      toast.info(`🔄 Complaint updated: ${data?.title || 'Status changed'}`);
+      fetchData();
+    };
+    const onResolved = (data) => {
+      toast.success(`🎉 Complaint resolved: ${data?.title || 'A complaint was resolved'}`);
+      fetchData();
+    };
+
+    socketService.on('complaint_created', onCreated);
+    socketService.on('complaint_assigned', onAssigned);
+    socketService.on('complaint_updated', onUpdated);
+    socketService.on('complaint_resolved', onResolved);
+
+    return () => {
+      socketService.off('complaint_created', onCreated);
+      socketService.off('complaint_assigned', onAssigned);
+      socketService.off('complaint_updated', onUpdated);
+      socketService.off('complaint_resolved', onResolved);
+    };
+  }, [user, fetchData, toast]);
 
   useEffect(() => { fetchData(); }, [filter]);
 
@@ -60,8 +101,11 @@ const Complaints = () => {
       await complaintAPI.create(form);
       setShowModal(false);
       setForm({ title: '', description: '', category: 'traffic', location: '', zone: 'central' });
+      toast.success('Complaint submitted successfully!');
       fetchData();
-    } catch (err) { console.error(err); }
+    } catch (err) { 
+      toast.error(err.response?.data?.message || 'Failed to submit complaint');
+    }
   };
 
   // Admin: open assign modal
@@ -83,8 +127,11 @@ const Complaints = () => {
     try {
       await complaintAPI.assign(showAssignModal._id, assignForm);
       setShowAssignModal(null);
+      toast.success('Operator assigned successfully!');
       fetchData();
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Assignment failed');
+    }
   };
 
   // Operator: open status modal
@@ -99,8 +146,11 @@ const Complaints = () => {
     try {
       await complaintAPI.updateStatus(showStatusModal._id, statusForm);
       setShowStatusModal(null);
+      toast.success(`Status updated to ${statusForm.status}!`);
       fetchData();
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Status update failed');
+    }
   };
 
   if (loading) return <div className="loading-container"><div className="spinner" /></div>;
@@ -149,6 +199,9 @@ const Complaints = () => {
       {/* Admin Analytics */}
       {isAdmin && stats && (
         <>
+          {/* AI Insights Panel */}
+          <AIInsights stats={stats} complaints={complaints} />
+
           <div className="grid-5 mb-1">
             <div className="stat-card"><div className="stat-icon blue"><MessageSquare size={18} /></div><div className="stat-info"><span className="stat-value">{stats.total}</span><span className="stat-label">Total</span></div></div>
             <div className="stat-card"><div className="stat-icon amber"><Clock size={18} /></div><div className="stat-info"><span className="stat-value">{stats.open}</span><span className="stat-label">Open</span></div></div>

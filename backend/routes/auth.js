@@ -15,31 +15,6 @@ router.post('/register', async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Name, email, and password are required.' });
     }
 
-    // --- OFFLINE DB BYPASS FOR REGISTRATION ---
-    const mongoose = require('mongoose');
-    if (mongoose.connection.readyState !== 1) {
-      console.warn('⚠️  MongoDB Offline: Activating Bypass Mode for Registration');
-      
-      const newRole = 'user'; // Defaults to user in the registration endpoint constraint
-      const newId = `offline_uid_${Date.now()}`;
-      const dept = department || 'general';
-
-      const token = jwt.sign({ 
-        id: newId, 
-        role: newRole, name, email, department: dept, 
-        isOffline: true 
-      }, process.env.JWT_SECRET, { expiresIn: '2h' });
-
-      return res.status(201).json({
-        success: true,
-        data: {
-          user: { id: newId, name, email, role: newRole, department: dept },
-          token
-        }
-      });
-    }
-    // ------------------------------------------
-
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ success: false, message: 'Email already registered.' });
@@ -82,36 +57,6 @@ router.post('/login', async (req, res, next) => {
     if (!email || !password) {
       return res.status(400).json({ success: false, message: 'Email and password are required.' });
     }
-
-    // --- OFFLINE DB BYPASS FOR DEMO CREDENTIALS ---
-    const mongoose = require('mongoose');
-    if (mongoose.connection.readyState !== 1) {
-      console.warn('⚠️  MongoDB Offline: Activating Bypass Mode for Login');
-      let role = 'user';
-      let name = 'Offline Citizen';
-      let dept = 'general';
-      
-      if (email === 'admin@smartcity.com') { role = 'admin'; name = 'Offline Admin'; }
-      else if (email.startsWith('traffic')) { role = 'operator'; name = 'Offline Operator'; dept = 'traffic'; }
-      else if (email.startsWith('waste')) { role = 'operator'; name = 'Offline Operator'; dept = 'waste'; }
-      else if (email.startsWith('water')) { role = 'operator'; name = 'Offline Operator'; dept = 'water'; }
-      else if (email.startsWith('emergency')) { role = 'operator'; name = 'Offline Operator'; dept = 'emergency'; }
-      
-      const token = jwt.sign({ 
-        id: `offline_uid_${Date.now()}`, 
-        role, name, email, department: dept, 
-        isOffline: true 
-      }, process.env.JWT_SECRET, { expiresIn: '2h' });
-
-      return res.json({
-        success: true,
-        data: {
-          user: { id: `offline_uid_${Date.now()}`, name, email, role, department: dept },
-          token
-        }
-      });
-    }
-    // ----------------------------------------------
 
     const user = await User.findOne({ email }).select('+password');
     if (!user) {

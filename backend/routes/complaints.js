@@ -5,6 +5,7 @@ const ActivityLog = require('../models/ActivityLog');
 const Alert = require('../models/Alert');
 const auth = require('../middleware/auth');
 const roleCheck = require('../middleware/roleCheck');
+const { getIo } = require('../utils/socket');
 const router = express.Router();
 
 // ──────────────────────────────────────────────
@@ -180,6 +181,10 @@ router.post('/', auth, roleCheck('user'), async (req, res, next) => {
     const populated = await Complaint.findById(complaint._id)
       .populate('createdBy', 'name email');
 
+    // Emit real-time event
+    const io = getIo();
+    if (io) io.emit('complaint_created', { title: complaint.title, category: complaint.category, priority: complaint.priority });
+
     res.status(201).json({ success: true, data: populated });
   } catch (error) { next(error); }
 });
@@ -212,6 +217,10 @@ router.put('/:id/assign', auth, roleCheck('admin'), async (req, res, next) => {
     const populated = await Complaint.findById(complaint._id)
       .populate('createdBy', 'name email')
       .populate('assignedTo', 'name email department');
+
+    // Emit real-time event
+    const io = getIo();
+    if (io) io.emit('complaint_assigned', { title: complaint.title, assignedTo: populated.assignedTo?.name });
 
     res.json({ success: true, data: populated });
   } catch (error) { next(error); }
@@ -267,6 +276,16 @@ router.put('/:id/status', auth, roleCheck('operator'), async (req, res, next) =>
     const populated = await Complaint.findById(complaint._id)
       .populate('createdBy', 'name email')
       .populate('assignedTo', 'name email department');
+
+    // Emit real-time event
+    const io = getIo();
+    if (io) {
+      if (status === 'resolved') {
+        io.emit('complaint_resolved', { title: complaint.title });
+      } else {
+        io.emit('complaint_updated', { title: complaint.title, status: complaint.status });
+      }
+    }
 
     res.json({ success: true, data: populated });
   } catch (error) { next(error); }

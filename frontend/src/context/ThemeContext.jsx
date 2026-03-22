@@ -10,7 +10,7 @@ export const useTheme = () => {
 
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState(() => {
-    return localStorage.getItem('smartcity_theme') || 'dark';
+    return localStorage.getItem('smartcity_theme') || 'light';
   });
 
   useEffect(() => {

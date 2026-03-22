@@ -1,7 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { ToastProvider } from './context/ToastContext';
 import Layout from './components/Layout/Layout';
+import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Traffic from './pages/Traffic';
@@ -46,11 +48,16 @@ const AppRoutes = () => {
 
   return (
     <Routes>
+      {/* Public Landing Page */}
+      <Route path="/welcome" element={user ? <Navigate to="/" replace /> : <Landing />} />
+      
+      {/* Auth */}
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
+      
+      {/* Protected App */}
       <Route path="/" element={
         <ProtectedRoute><Layout /></ProtectedRoute>
       }>
-        {/* Dashboard — role-aware UI rendered inside dashboard page */}
         <Route index element={<Dashboard />} />
 
         {/* City modules — admin + operator only */}
@@ -76,27 +83,25 @@ const AppRoutes = () => {
         {/* Complaints — all roles */}
         <Route path="complaints" element={<Complaints />} />
 
-        {/* Citizen assistant — user only */}
+        {/* Citizen only */}
         <Route path="assistant" element={
           <ProtectedRoute roles={['user']}><CitizenAssistant /></ProtectedRoute>
         } />
-
-        {/* Citizen announcements — user only */}
         <Route path="announcements" element={
           <ProtectedRoute roles={['user']}><CitizenAnnouncements /></ProtectedRoute>
         } />
 
-        {/* Admin announcements management — admin only */}
+        {/* Admin only */}
         <Route path="admin/announcements" element={
           <ProtectedRoute roles={['admin']}><Announcements /></ProtectedRoute>
         } />
-
-        {/* Admin only */}
         <Route path="logs" element={
           <ProtectedRoute roles={['admin']}><Logs /></ProtectedRoute>
         } />
       </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
+      
+      {/* Catch-all: redirect to landing if not logged in, or dashboard if logged in */}
+      <Route path="*" element={<Navigate to={user ? "/" : "/welcome"} replace />} />
     </Routes>
   );
 };
@@ -106,7 +111,9 @@ function App() {
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
-          <AppRoutes />
+          <ToastProvider>
+            <AppRoutes />
+          </ToastProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>
