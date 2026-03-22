@@ -49,16 +49,15 @@ const AppRoutes = () => {
   return (
     <Routes>
       {/* Public Landing Page */}
-      <Route path="/welcome" element={user ? <Navigate to="/" replace /> : <Landing />} />
+      <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Landing />} />
+      <Route path="/welcome" element={<Navigate to="/" replace />} />
       
       {/* Auth */}
-      <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
+      <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
       
-      {/* Protected App */}
-      <Route path="/" element={
-        <ProtectedRoute><Layout /></ProtectedRoute>
-      }>
-        <Route index element={<Dashboard />} />
+      {/* Protected App Layout */}
+      <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+        <Route path="dashboard" element={<Dashboard />} />
 
         {/* City modules — admin + operator only */}
         <Route path="traffic" element={
@@ -100,8 +99,8 @@ const AppRoutes = () => {
         } />
       </Route>
       
-      {/* Catch-all: redirect to landing if not logged in, or dashboard if logged in */}
-      <Route path="*" element={<Navigate to={user ? "/" : "/welcome"} replace />} />
+      {/* Catch-all */}
+      <Route path="*" element={<Navigate to={user ? "/dashboard" : "/"} replace />} />
     </Routes>
   );
 };

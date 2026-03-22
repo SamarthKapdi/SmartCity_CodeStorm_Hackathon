@@ -44,7 +44,7 @@ const Sidebar = () => {
     if (isAdmin || isOperator) {
       // Admin and operators see full city modules
       items.unshift(
-        { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+        { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { path: '/traffic', label: 'Traffic', icon: Car },
         { path: '/waste', label: 'Waste', icon: Trash2 },
         { path: '/water', label: 'Water', icon: Droplets },
@@ -56,7 +56,7 @@ const Sidebar = () => {
 
     if (isUser) {
       // Citizens only see complaints (already added above)
-      items.unshift({ path: '/', label: 'Dashboard', icon: LayoutDashboard });
+      items.unshift({ path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard });
       items.push(
         { path: '/assistant', label: 'City Assistant', icon: Bot },
         { path: '/announcements', label: 'City Alerts', icon: Bell, badge: announcementCount }
