@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const auth = require('../middleware/auth');
 const predictionService = require('../services/predictionService');
+const { getCityHealthData } = require('../services/cityHealthService');
 const TrafficData = require('../models/TrafficData');
 const WasteData = require('../models/WasteData');
 const WaterData = require('../models/WaterData');
@@ -141,6 +142,14 @@ router.get('/', auth, async (req, res, next) => {
         .limit(5)
         .select('title category priority status location createdAt');
 
+      // Fetch city health data (weather + AQI)
+      let cityHealthData = null;
+      try {
+        cityHealthData = await getCityHealthData();
+      } catch (err) {
+        console.error('City health fetch error for citizen dashboard:', err.message);
+      }
+
       return res.json({
         success: true,
         data: {
@@ -167,7 +176,8 @@ router.get('/', auth, async (req, res, next) => {
             scoreLabel,
             motivationTips,
             recentComplaints
-          }
+          },
+          cityHealth: cityHealthData
         }
       });
     }

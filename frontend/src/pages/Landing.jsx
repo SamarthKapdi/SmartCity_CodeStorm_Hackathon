@@ -217,7 +217,7 @@ const Landing = () => {
             <div className="showcase-score">
               <svg viewBox="0 0 120 120" className="showcase-ring">
                 <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8" />
-                <circle cx="60" cy="60" r="52" fill="none" stroke="#10b981" strokeWidth="8" 
+                <circle cx="60" cy="60" r="52" fill="none" stroke="#10b981" strokeWidth="8"
                   strokeDasharray="284 327" strokeLinecap="round" transform="rotate(-90 60 60)" />
               </svg>
               <span className="showcase-score-val">87</span>

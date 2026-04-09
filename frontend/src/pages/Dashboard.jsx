@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { dashboardAPI, announcementAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import AnnouncementCard from '../components/AnnouncementCard';
+import CityHealthCard from '../components/CityHealthCard';
 import {
   Car, Trash2, Droplets, Lightbulb, AlertTriangle, Bell,
   Activity, TrendingUp, RefreshCw, Clock,
@@ -16,6 +17,7 @@ import './Dashboard.css';
 const Dashboard = () => {
   const [data, setData] = useState(null);
   const [announcements, setAnnouncements] = useState([]);
+  const [cityHealth, setCityHealth] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const { user } = useAuth();
@@ -24,6 +26,11 @@ const Dashboard = () => {
     try {
       const dashRes = await dashboardAPI.getData();
       setData(dashRes.data.data);
+
+      // Set city health data from dashboard response
+      if (dashRes.data.data.cityHealth) {
+        setCityHealth(dashRes.data.data.cityHealth);
+      }
 
       // Fetch announcements for citizen users
       if (user?.role === 'user' && user?.zone) {
@@ -132,6 +139,8 @@ const Dashboard = () => {
             </div>
           </div>
         )}
+
+        <CityHealthCard data={cityHealth} />
 
         <div className="citizen-score-card">
           <div className="citizen-score-main">

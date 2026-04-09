@@ -140,4 +140,9 @@ export const announcementAPI = {
   recordView: (id) => api.post(`/announcements/${id}/view`)
 };
 
+// City Health API (Weather + AQI)
+export const cityHealthAPI = {
+  getData: () => api.get('/city-health')
+};
+
 export default api;
