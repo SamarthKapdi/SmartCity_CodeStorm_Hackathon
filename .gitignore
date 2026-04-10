@@ -32,3 +32,4 @@ dist-ssr
 # Misc
 coverage
 .nyc_output
+backend/uploads/

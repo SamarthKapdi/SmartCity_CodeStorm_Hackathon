@@ -1,45 +1,67 @@
-import { useState, useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import { useTheme } from '../../context/ThemeContext';
-import { announcementAPI } from '../../services/api';
+import { useState, useEffect } from 'react'
+import { NavLink } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
+import { useTheme } from '../../context/ThemeContext'
+import { announcementAPI } from '../../services/api'
 import {
-  LayoutDashboard, Car, Trash2, Droplets, Lightbulb,
-  AlertTriangle, Bell, ScrollText, LogOut, ChevronLeft,
-  ChevronRight, Shield, Zap, MessageSquare, Sun, Moon, Bot, Megaphone
-} from 'lucide-react';
-import './Sidebar.css';
+  LayoutDashboard,
+  Car,
+  Trash2,
+  Droplets,
+  Lightbulb,
+  AlertTriangle,
+  Bell,
+  ScrollText,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  Shield,
+  Zap,
+  MessageSquare,
+  Sun,
+  Moon,
+  Bot,
+  Megaphone,
+  Satellite,
+} from 'lucide-react'
+import './Sidebar.css'
 
 const Sidebar = () => {
-  const [collapsed, setCollapsed] = useState(false);
-  const [announcementCount, setAnnouncementCount] = useState(0);
-  const { user, logout, isAdmin, isOperator, isUser } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
+  const [collapsed, setCollapsed] = useState(false)
+  const [announcementCount, setAnnouncementCount] = useState(0)
+  const { user, logout, isAdmin, isOperator, isUser } = useAuth()
+  const { isDark, toggleTheme } = useTheme()
 
   // Fetch announcement count for citizens
   useEffect(() => {
     if (isUser && user?.zone) {
       const fetchAnnouncementCount = async () => {
         try {
-          const res = await announcementAPI.getAll({ status: 'active' });
-          const filtered = res.data.data.filter(a => a.zones.includes(user.zone) || a.zones.includes('all'));
-          setAnnouncementCount(filtered.length);
+          const res = await announcementAPI.getAll({ status: 'active' })
+          const filtered = res.data.data.filter(
+            (a) => a.zones.includes(user.zone) || a.zones.includes('all')
+          )
+          setAnnouncementCount(filtered.length)
         } catch (err) {
-          console.error('Fetch announcements error:', err);
+          console.error('Fetch announcements error:', err)
         }
-      };
-      fetchAnnouncementCount();
-      const interval = setInterval(fetchAnnouncementCount, 30000); // Refresh every 30s
-      return () => clearInterval(interval);
+      }
+      fetchAnnouncementCount()
+      const interval = setInterval(fetchAnnouncementCount, 30000) // Refresh every 30s
+      return () => clearInterval(interval)
     }
-  }, [isUser, user?.zone]);
+  }, [isUser, user?.zone])
 
   // Build nav items based on role
   const getNavItems = () => {
-    const items = [];
+    const items = []
 
     // Complaints is available to ALL roles
-    items.push({ path: '/complaints', label: 'Complaints', icon: MessageSquare });
+    items.push({
+      path: '/complaints',
+      label: 'Complaints',
+      icon: MessageSquare,
+    })
 
     if (isAdmin || isOperator) {
       // Admin and operators see full city modules
@@ -49,29 +71,45 @@ const Sidebar = () => {
         { path: '/waste', label: 'Waste', icon: Trash2 },
         { path: '/water', label: 'Water', icon: Droplets },
         { path: '/lighting', label: 'Lighting', icon: Lightbulb },
+        { path: '/iot', label: 'IoT Devices', icon: Satellite },
         { path: '/incidents', label: 'Incidents', icon: AlertTriangle },
-        { path: '/alerts', label: 'Alerts', icon: Bell },
-      );
+        { path: '/alerts', label: 'Alerts', icon: Bell }
+      )
     }
 
     if (isUser) {
       // Citizens only see complaints (already added above)
-      items.unshift({ path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard });
+      items.unshift({
+        path: '/dashboard',
+        label: 'Dashboard',
+        icon: LayoutDashboard,
+      })
       items.push(
         { path: '/assistant', label: 'City Assistant', icon: Bot },
-        { path: '/announcements', label: 'City Alerts', icon: Bell, badge: announcementCount }
-      );
+        {
+          path: '/announcements',
+          label: 'City Alerts',
+          icon: Bell,
+          badge: announcementCount,
+        }
+      )
     }
 
-    return items;
-  };
+    return items
+  }
 
-  const adminItems = isAdmin ? [
-    { path: '/admin/announcements', label: 'City Announcements', icon: Megaphone },
-    { path: '/logs', label: 'Activity Logs', icon: ScrollText },
-  ] : [];
+  const adminItems = isAdmin
+    ? [
+        {
+          path: '/admin/announcements',
+          label: 'City Announcements',
+          icon: Megaphone,
+        },
+        { path: '/logs', label: 'Activity Logs', icon: ScrollText },
+      ]
+    : []
 
-  const navItems = getNavItems();
+  const navItems = getNavItems()
 
   return (
     <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
@@ -87,22 +125,29 @@ const Sidebar = () => {
             </div>
           )}
         </div>
-        <button className="collapse-btn" onClick={() => setCollapsed(!collapsed)}>
+        <button
+          className="collapse-btn"
+          onClick={() => setCollapsed(!collapsed)}
+        >
           {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
         </button>
       </div>
 
       <nav className="sidebar-nav">
         <div className="nav-section">
-          {!collapsed && <span className="nav-section-label">
-            {isUser ? 'Citizen Portal' : 'Modules'}
-          </span>}
+          {!collapsed && (
+            <span className="nav-section-label">
+              {isUser ? 'Citizen Portal' : 'Modules'}
+            </span>
+          )}
           {navItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
               end={item.path === '/'}
-              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+              className={({ isActive }) =>
+                `nav-item ${isActive ? 'active' : ''}`
+              }
               title={collapsed ? item.label : ''}
             >
               <div className="nav-item-content">
@@ -123,7 +168,9 @@ const Sidebar = () => {
               <NavLink
                 key={item.path}
                 to={item.path}
-                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                className={({ isActive }) =>
+                  `nav-item ${isActive ? 'active' : ''}`
+                }
                 title={collapsed ? item.label : ''}
               >
                 <item.icon size={18} />
@@ -136,7 +183,11 @@ const Sidebar = () => {
 
       <div className="sidebar-footer">
         {/* Theme Toggle */}
-        <button className="theme-toggle-btn" onClick={toggleTheme} title={isDark ? 'Switch to Light' : 'Switch to Dark'}>
+        <button
+          className="theme-toggle-btn"
+          onClick={toggleTheme}
+          title={isDark ? 'Switch to Light' : 'Switch to Dark'}
+        >
           {isDark ? <Sun size={16} /> : <Moon size={16} />}
           {!collapsed && <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>}
         </button>
@@ -161,7 +212,7 @@ const Sidebar = () => {
         </button>
       </div>
     </aside>
-  );
-};
+  )
+}
 
-export default Sidebar;
+export default Sidebar

@@ -1,33 +1,33 @@
-import axios from 'axios';
+import axios from 'axios'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 const api = axios.create({
   baseURL: API_BASE,
-  headers: { 'Content-Type': 'application/json' }
-});
+  headers: { 'Content-Type': 'application/json' },
+})
 
 // Add JWT token to every request automatically
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('smartcity_token');
+  const token = localStorage.getItem('smartcity_token')
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    config.headers.Authorization = `Bearer ${token}`
   }
-  return config;
-});
+  return config
+})
 
 // Handle 401 globally
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      localStorage.removeItem('smartcity_token');
-      localStorage.removeItem('smartcity_user');
-      window.location.href = '/login';
+      localStorage.removeItem('smartcity_token')
+      localStorage.removeItem('smartcity_user')
+      window.location.href = '/login'
     }
-    return Promise.reject(error);
+    return Promise.reject(error)
   }
-);
+)
 
 // Auth API
 export const authAPI = {
@@ -36,14 +36,14 @@ export const authAPI = {
   getMe: () => api.get('/auth/me'),
   getUsers: (params) => api.get('/auth/users', { params }),
   getOperators: () => api.get('/auth/operators'),
-  createUser: (data) => api.post('/auth/users', data)
-};
+  createUser: (data) => api.post('/auth/users', data),
+}
 
 // Dashboard API
 export const dashboardAPI = {
   getData: () => api.get('/dashboard'),
-  predict: () => api.post('/dashboard/predict')
-};
+  predict: () => api.post('/dashboard/predict'),
+}
 
 // Traffic API
 export const trafficAPI = {
@@ -51,11 +51,12 @@ export const trafficAPI = {
   getStats: () => api.get('/traffic/stats'),
   create: (data) => api.post('/traffic', data),
   update: (id, data) => api.put(`/traffic/${id}`, data),
-  reportIncident: (id, data) => api.post(`/traffic/${id}/report-incident`, data),
+  reportIncident: (id, data) =>
+    api.post(`/traffic/${id}/report-incident`, data),
   emergencyOverride: (id) => api.post(`/traffic/${id}/emergency-override`),
   clearOverride: (id) => api.post(`/traffic/${id}/clear-override`),
-  predict: (zone) => api.get(`/traffic/predict/${zone}`)
-};
+  predict: (zone) => api.get(`/traffic/predict/${zone}`),
+}
 
 // Waste API
 export const wasteAPI = {
@@ -65,8 +66,8 @@ export const wasteAPI = {
   update: (id, data) => api.put(`/waste/${id}`, data),
   collect: (id) => api.post(`/waste/${id}/collect`),
   optimizeRoutes: (zone) => api.post(`/waste/optimize-routes/${zone}`),
-  detectMissed: () => api.post('/waste/detect-missed')
-};
+  detectMissed: () => api.post('/waste/detect-missed'),
+}
 
 // Water API
 export const waterAPI = {
@@ -75,8 +76,8 @@ export const waterAPI = {
   create: (data) => api.post('/water', data),
   update: (id, data) => api.put(`/water/${id}`, data),
   getAnalytics: (zone) => api.get(`/water/analytics/${zone}`),
-  analyze: (zone) => api.post(`/water/analyze/${zone}`)
-};
+  analyze: (zone) => api.post(`/water/analyze/${zone}`),
+}
 
 // Lighting API
 export const lightingAPI = {
@@ -87,8 +88,8 @@ export const lightingAPI = {
   toggleAutoMode: (id) => api.put(`/lighting/${id}/auto-mode`),
   reportFault: (id, data) => api.post(`/lighting/${id}/report-fault`, data),
   resolveFault: (id) => api.post(`/lighting/${id}/resolve-fault`),
-  autoToggle: () => api.post('/lighting/auto-toggle')
-};
+  autoToggle: () => api.post('/lighting/auto-toggle'),
+}
 
 // Incidents API
 export const incidentAPI = {
@@ -97,8 +98,8 @@ export const incidentAPI = {
   create: (data) => api.post('/incidents', data),
   update: (id, data) => api.put(`/incidents/${id}`, data),
   assign: (id, data) => api.put(`/incidents/${id}/assign`, data),
-  delete: (id) => api.delete(`/incidents/${id}`)
-};
+  delete: (id) => api.delete(`/incidents/${id}`),
+}
 
 // Alerts API
 export const alertAPI = {
@@ -106,13 +107,13 @@ export const alertAPI = {
   markRead: (id) => api.put(`/alerts/${id}/read`),
   acknowledge: (id) => api.put(`/alerts/${id}/acknowledge`),
   markAllRead: () => api.put('/alerts/read-all'),
-  delete: (id) => api.delete(`/alerts/${id}`)
-};
+  delete: (id) => api.delete(`/alerts/${id}`),
+}
 
 // Logs API
 export const logAPI = {
-  getAll: (params) => api.get('/logs', { params })
-};
+  getAll: (params) => api.get('/logs', { params }),
+}
 
 // Complaints API
 export const complaintAPI = {
@@ -122,14 +123,15 @@ export const complaintAPI = {
   create: (data) => api.post('/complaints', data),
   assign: (id, data) => api.put(`/complaints/${id}/assign`, data),
   updateStatus: (id, data) => api.put(`/complaints/${id}/status`, data),
-  suggestOperator: (params) => api.get('/complaints/suggest-operator', { params }),
-  checkOverdue: () => api.post('/complaints/overdue/check')
-};
+  suggestOperator: (params) =>
+    api.get('/complaints/suggest-operator', { params }),
+  checkOverdue: () => api.post('/complaints/overdue/check'),
+}
 
 // Citizen Chat Assistant API
 export const chatAPI = {
-  askAssistant: (data) => api.post('/chat/assistant', data)
-};
+  askAssistant: (data) => api.post('/chat/assistant', data),
+}
 
 // Announcements API
 export const announcementAPI = {
@@ -137,12 +139,28 @@ export const announcementAPI = {
   create: (data) => api.post('/announcements', data),
   update: (id, data) => api.put(`/announcements/${id}`, data),
   delete: (id) => api.delete(`/announcements/${id}`),
-  recordView: (id) => api.post(`/announcements/${id}/view`)
-};
+  recordView: (id) => api.post(`/announcements/${id}/view`),
+}
 
 // City Health API (Weather + AQI)
 export const cityHealthAPI = {
-  getData: () => api.get('/city-health')
-};
+  getData: () => api.get('/city-health'),
+}
 
-export default api;
+// IoT Devices API
+export const iotAPI = {
+  getSummary: () => api.get('/iot/summary'),
+  getDevices: (params) => api.get('/iot/devices', { params }),
+  getDevice: (deviceId) => api.get(`/iot/devices/${deviceId}`),
+  registerDevice: (data) => api.post('/iot/devices/register', data),
+  connectDevice: (deviceId, data) =>
+    api.post(`/iot/devices/${deviceId}/connect`, data),
+  heartbeatDevice: (deviceId, data) =>
+    api.post(`/iot/devices/${deviceId}/heartbeat`, data),
+  disconnectDevice: (deviceId, data) =>
+    api.post(`/iot/devices/${deviceId}/disconnect`, data),
+  sendTelemetry: (deviceId, data) =>
+    api.post(`/iot/devices/${deviceId}/telemetry`, data),
+}
+
+export default api
