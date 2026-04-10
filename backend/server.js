@@ -33,6 +33,24 @@ const mapRoutes = require('./routes/map')
 
 const app = express()
 
+const parseTrustProxy = (value) => {
+  if (value === undefined) return undefined
+  if (value === 'true') return true
+  if (value === 'false') return false
+  if (!Number.isNaN(Number(value))) return Number(value)
+  return value
+}
+
+const trustProxyFromEnv = parseTrustProxy(process.env.TRUST_PROXY)
+const trustProxySetting =
+  trustProxyFromEnv !== undefined
+    ? trustProxyFromEnv
+    : process.env.NODE_ENV === 'production'
+      ? 1
+      : false
+
+app.set('trust proxy', trustProxySetting)
+
 // Security headers
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }))
 
