@@ -55,6 +55,20 @@ router.post('/', auth, roleCheck('admin'), async (req, res, next) => {
       });
     }
 
+    if (String(title).trim().length < 5) {
+      return res.status(400).json({
+        success: false,
+        message: 'Title must be at least 5 characters long.'
+      });
+    }
+
+    if (String(message).trim().length < 10) {
+      return res.status(400).json({
+        success: false,
+        message: 'Message must be at least 10 characters long.'
+      });
+    }
+
     const announcement = new Announcement({
       title,
       message,
@@ -95,8 +109,24 @@ router.put('/:id', auth, roleCheck('admin'), async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Announcement not found.' });
     }
 
-    if (title) announcement.title = title;
-    if (message) announcement.message = message;
+    if (title) {
+      if (String(title).trim().length < 5) {
+        return res.status(400).json({
+          success: false,
+          message: 'Title must be at least 5 characters long.'
+        });
+      }
+      announcement.title = title;
+    }
+    if (message) {
+      if (String(message).trim().length < 10) {
+        return res.status(400).json({
+          success: false,
+          message: 'Message must be at least 10 characters long.'
+        });
+      }
+      announcement.message = message;
+    }
     if (type) announcement.type = type;
     if (priority) announcement.priority = priority;
     if (zones && zones.length > 0) announcement.zones = zones;

@@ -18,6 +18,7 @@ import './Complaints.css';
 
 const STATUS_COLORS = { 'open': '#3b82f6', 'in-progress': '#f59e0b', 'resolved': '#10b981' };
 const PRIORITY_COLORS = { 'low': '#10b981', 'medium': '#f59e0b', 'high': '#ef4444' };
+const BACKEND_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '');
 
 const Complaints = () => {
   const [complaints, setComplaints] = useState([]);
@@ -30,11 +31,18 @@ const Complaints = () => {
   const [operators, setOperators] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [form, setForm] = useState({ title: '', description: '', category: 'traffic', location: '', zone: 'central', image: null });
+  const [formErrors, setFormErrors] = useState({});
   const [imagePreview, setImagePreview] = useState(null);
   const [assignForm, setAssignForm] = useState({ assignedTo: '', priority: 'medium', deadline: '' });
   const [statusForm, setStatusForm] = useState({ status: '', remark: '' });
   const { isAdmin, isOperator, isUser, user } = useAuth();
   const toast = useToast();
+
+  const getComplaintImageSrc = (imageUrl) => {
+    if (!imageUrl) return null;
+    if (/^https?:\/\//i.test(imageUrl)) return imageUrl;
+    return `${BACKEND_BASE_URL}${imageUrl}`;
+  };
 
   const fetchData = useCallback(async () => {
     try {
@@ -99,6 +107,7 @@ const Complaints = () => {
   // Create complaint (citizen only) — with image upload
   const handleCreate = async (e) => {
     e.preventDefault();
+    setFormErrors({});
     try {
       const formData = new FormData();
       formData.append('title', form.title);
@@ -110,10 +119,13 @@ const Complaints = () => {
       await complaintAPI.create(formData);
       setShowModal(false);
       setForm({ title: '', description: '', category: 'traffic', location: '', zone: 'central', image: null });
+      setFormErrors({});
       setImagePreview(null);
       toast.success('Complaint submitted successfully!');
       fetchData();
     } catch (err) { 
+      const fieldErrors = err.response?.data?.fieldErrors || {};
+      setFormErrors(fieldErrors);
       toast.error(err.response?.data?.message || 'Failed to submit complaint');
     }
   };
@@ -122,6 +134,7 @@ const Complaints = () => {
     const file = e.target.files[0];
     if (file) {
       setForm(f => ({ ...f, image: file }));
+      setFormErrors((prev) => ({ ...prev, image: undefined }));
       setImagePreview(URL.createObjectURL(file));
     }
   };
@@ -300,7 +313,9 @@ const Complaints = () => {
       {/* Complaint Cards */}
       <div className="card-grid">
         <AnimatePresence>
-        {complaints.map((c, idx) => (
+        {complaints.map((c, idx) => {
+          const complaintImageSrc = getComplaintImageSrc(c.imageUrl);
+          return (
           <motion.div
             key={c._id}
             initial={{ opacity: 0, y: 15 }}
@@ -318,9 +333,12 @@ const Complaints = () => {
               <span className="badge" style={{ background: 'rgba(139,92,246,0.12)', color: '#8b5cf6' }}>{c.category}</span>
               {c.isOverdue && <span className="badge badge-red">⏰ OVERDUE</span>}
             </div>
-            {c.imageUrl && (
-              <div style={{ margin: '0.5rem 0', borderRadius: 8, overflow: 'hidden', maxHeight: 180 }}>
-                <img src={`http://localhost:5000${c.imageUrl}`} alt="Complaint" style={{ width: '100%', objectFit: 'cover', borderRadius: 8 }} />
+            {complaintImageSrc && (
+              <div className="complaint-image-wrap">
+                <img src={complaintImageSrc} alt={c.title || 'Complaint'} className="complaint-image" />
+                <span className="complaint-image-chip">
+                  <Image size={12} /> Uploaded image
+                </span>
               </div>
             )}
             <p className="complaint-desc">{c.description}</p>
@@ -376,7 +394,8 @@ const Complaints = () => {
               )}
             </div>
           </motion.div>
-        ))}
+        );
+      })}
         </AnimatePresence>
       </div>
       {complaints.length === 0 && <div className="empty-state"><p>No complaints found</p></div>}
@@ -392,40 +411,92 @@ const Complaints = () => {
             <form onSubmit={handleCreate}>
               <div className="input-group">
                 <label>Title</label>
-                <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} required placeholder="Brief title of complaint" />
+                <input
+                  className={formErrors.title ? 'input-error' : ''}
+                  value={form.title}
+                  onChange={e => {
+                    setForm(f => ({ ...f, title: e.target.value }));
+                    setFormErrors(prev => ({ ...prev, title: undefined }));
+                  }}
+                  required
+                  placeholder="Brief title of complaint"
+                />
+                {formErrors.title && <span className="field-error">{formErrors.title}</span>}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="input-group">
                   <label>Category</label>
-                  <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>
+                  <select
+                    className={formErrors.category ? 'input-error' : ''}
+                    value={form.category}
+                    onChange={e => {
+                      setForm(f => ({ ...f, category: e.target.value }));
+                      setFormErrors(prev => ({ ...prev, category: undefined }));
+                    }}
+                  >
                     {['traffic', 'water', 'waste', 'lighting', 'emergency'].map(c => (
                       <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
                     ))}
                   </select>
+                  {formErrors.category && <span className="field-error">{formErrors.category}</span>}
                 </div>
                 <div className="input-group">
                   <label>Zone</label>
-                  <select value={form.zone} onChange={e => setForm(f => ({ ...f, zone: e.target.value }))}>
+                  <select
+                    className={formErrors.zone ? 'input-error' : ''}
+                    value={form.zone}
+                    onChange={e => {
+                      setForm(f => ({ ...f, zone: e.target.value }));
+                      setFormErrors(prev => ({ ...prev, zone: undefined }));
+                    }}
+                  >
                     {['north', 'south', 'east', 'west', 'central'].map(z => (
                       <option key={z} value={z}>{z.charAt(0).toUpperCase() + z.slice(1)}</option>
                     ))}
                   </select>
+                  {formErrors.zone && <span className="field-error">{formErrors.zone}</span>}
                 </div>
               </div>
               <div className="input-group">
                 <label>Location</label>
-                <input value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} required placeholder="Where is the issue?" />
+                <input
+                  className={formErrors.location ? 'input-error' : ''}
+                  value={form.location}
+                  onChange={e => {
+                    setForm(f => ({ ...f, location: e.target.value }));
+                    setFormErrors(prev => ({ ...prev, location: undefined }));
+                  }}
+                  required
+                  placeholder="Where is the issue?"
+                />
+                {formErrors.location && <span className="field-error">{formErrors.location}</span>}
               </div>
               <div className="input-group">
                 <label>Description</label>
-                <textarea rows={3} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} required placeholder="Describe the problem in detail..." />
+                <textarea
+                  className={formErrors.description ? 'input-error' : ''}
+                  rows={3}
+                  value={form.description}
+                  onChange={e => {
+                    setForm(f => ({ ...f, description: e.target.value }));
+                    setFormErrors(prev => ({ ...prev, description: undefined }));
+                  }}
+                  required
+                  placeholder="Describe the problem in detail..."
+                />
+                {formErrors.description && <span className="field-error">{formErrors.description}</span>}
               </div>
               <div className="input-group">
                 <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Image size={14} /> Attach Photo (optional)</label>
-                <input type="file" accept="image/*" onChange={handleImageChange} style={{ padding: '0.5rem' }} />
+                <div className="upload-input-wrap">
+                  <input type="file" accept="image/*" onChange={handleImageChange} style={{ padding: '0.5rem' }} />
+                </div>
+                {form.image && (
+                  <span className="upload-file-name">Selected: {form.image.name}</span>
+                )}
                 {imagePreview && (
-                  <div style={{ marginTop: '0.5rem', borderRadius: 8, overflow: 'hidden', maxHeight: 150 }}>
-                    <img src={imagePreview} alt="Preview" style={{ width: '100%', objectFit: 'cover', borderRadius: 8 }} />
+                  <div className="upload-preview-wrap">
+                    <img src={imagePreview} alt="Preview" className="upload-preview-image" />
                     <button type="button" className="btn btn-sm btn-outline" style={{ marginTop: '0.5rem' }} onClick={() => { setForm(f => ({ ...f, image: null })); setImagePreview(null); }}>
                       <X size={12} /> Remove
                     </button>

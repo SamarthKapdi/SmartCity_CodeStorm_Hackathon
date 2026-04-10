@@ -149,12 +149,9 @@ router.get('/:id', auth, async (req, res, next) => {
 // ──────────────────────────────────────────────
 // POST /api/complaints — create (user only, with optional image)
 // ──────────────────────────────────────────────
-router.post('/', auth, roleCheck('user'), upload.single('image'), async (req, res, next) => {
+router.post('/', auth, roleCheck('user'), upload.single('image'), validate(createComplaintSchema), async (req, res, next) => {
   try {
     const { title, description, category, location, zone, priority, coordinates } = req.body;
-    if (!title || !description || !category || !location) {
-      return res.status(400).json({ success: false, message: 'Title, description, category, and location are required.' });
-    }
 
     // Parse coordinates if stringified
     let coords = {};
@@ -204,10 +201,9 @@ router.post('/', auth, roleCheck('user'), upload.single('image'), async (req, re
 // ──────────────────────────────────────────────
 // PUT /api/complaints/:id/assign — admin assigns
 // ──────────────────────────────────────────────
-router.put('/:id/assign', auth, roleCheck('admin'), async (req, res, next) => {
+router.put('/:id/assign', auth, roleCheck('admin'), validate(assignComplaintSchema), async (req, res, next) => {
   try {
     const { assignedTo, priority, deadline } = req.body;
-    if (!assignedTo) return res.status(400).json({ success: false, message: 'assignedTo is required.' });
 
     const complaint = await Complaint.findById(req.params.id);
     if (!complaint) return res.status(404).json({ success: false, message: 'Complaint not found.' });

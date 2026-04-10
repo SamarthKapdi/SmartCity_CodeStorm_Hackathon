@@ -345,7 +345,11 @@ const seed = async () => {
         telemetry: { value: 118, message: 'Battery low' },
       },
     ]
-    await IoTDevice.create(iotDevices)
+    const iotDevicesForInsert = iotDevices.map(({ connectionKey, ...device }) => ({
+      ...device,
+      connectionKeyHash: connectionKey,
+    }))
+    await IoTDevice.create(iotDevicesForInsert)
     console.log(`📡 Created ${iotDevices.length} IoT devices`)
 
     // --- INCIDENTS ---
