@@ -30,11 +30,18 @@ import {
 } from 'lucide-react'
 import './Sidebar.css'
 
-const Sidebar = () => {
+const Sidebar = ({ mobileMenuOpen, setMobileMenuOpen }) => {
   const [collapsed, setCollapsed] = useState(false)
   const [announcementCount, setAnnouncementCount] = useState(0)
   const { user, logout, isAdmin, isOperator, isUser } = useAuth()
   const { isDark, toggleTheme } = useTheme()
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   // Fetch announcement count for citizens
   useEffect(() => {
@@ -126,11 +133,11 @@ const Sidebar = () => {
   const navItems = getNavItems()
 
   return (
-    <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
+    <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileMenuOpen ? 'mobile-open' : ''}`}>
       <div className="sidebar-header">
         <div className="sidebar-logo">
           <img src="/logo.jpg" alt="SmartCity" style={{ width: 34, height: 34, borderRadius: 10, objectFit: 'cover' }} />
-          {!collapsed && (
+          {(!collapsed || isMobile) && (
             <div className="logo-text">
               <span className="logo-title">SmartCity</span>
               <span className="logo-subtitle">Command Center</span>
@@ -139,15 +146,21 @@ const Sidebar = () => {
         </div>
         <button
           className="collapse-btn"
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={() => {
+            if (window.innerWidth <= 768) {
+              setMobileMenuOpen(false);
+            } else {
+              setCollapsed(!collapsed);
+            }
+          }}
         >
-          {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+          {window.innerWidth <= 768 ? <ChevronLeft size={16} /> : (collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />)}
         </button>
       </div>
 
       <nav className="sidebar-nav">
         <div className="nav-section">
-          {!collapsed && (
+          {(!collapsed || isMobile) && (
             <span className="nav-section-label">
               {isUser ? 'Citizen Portal' : 'Modules'}
             </span>
@@ -164,7 +177,7 @@ const Sidebar = () => {
             >
               <div className="nav-item-content">
                 <item.icon size={18} />
-                {!collapsed && <span>{item.label}</span>}
+                {(!collapsed || isMobile) && <span>{item.label}</span>}
                 {item.badge > 0 && (
                   <span className="nav-badge">{item.badge}</span>
                 )}
@@ -175,7 +188,7 @@ const Sidebar = () => {
 
         {adminItems.length > 0 && (
           <div className="nav-section">
-            {!collapsed && <span className="nav-section-label">Admin</span>}
+            {(!collapsed || isMobile) && <span className="nav-section-label">Admin</span>}
             {adminItems.map((item) => (
               <NavLink
                 key={item.path}
@@ -186,7 +199,7 @@ const Sidebar = () => {
                 title={collapsed ? item.label : ''}
               >
                 <item.icon size={18} />
-                {!collapsed && <span>{item.label}</span>}
+                {(!collapsed || isMobile) && <span>{item.label}</span>}
               </NavLink>
             ))}
           </div>
@@ -201,14 +214,14 @@ const Sidebar = () => {
           title={isDark ? 'Switch to Light' : 'Switch to Dark'}
         >
           {isDark ? <Sun size={16} /> : <Moon size={16} />}
-          {!collapsed && <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>}
+          {(!collapsed || isMobile) && <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>}
         </button>
 
         <div className="user-card">
           <div className="user-avatar">
             {user?.name?.charAt(0).toUpperCase()}
           </div>
-          {!collapsed && (
+          {(!collapsed || isMobile) && (
             <div className="user-info">
               <span className="user-name">{user?.name}</span>
               <span className="user-role">
@@ -221,7 +234,7 @@ const Sidebar = () => {
         </div>
         <button className="logout-btn" onClick={logout} title="Logout">
           <LogOut size={16} />
-          {!collapsed && <span>Logout</span>}
+          {(!collapsed || isMobile) && <span>Logout</span>}
         </button>
       </div>
     </aside>

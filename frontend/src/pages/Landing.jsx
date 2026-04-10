@@ -6,14 +6,16 @@ import {
   Zap, Brain, Shield, Wifi, BarChart3, Users, ArrowRight,
   CheckCircle, Bot, Bell, MapPin, Clock, ChevronRight,
   Github, Mail, Globe, Sparkles, Activity, Target, Sun, Moon,
-  Map, Siren, Satellite
+  Map, Siren, Satellite, Download, Menu, X,
 } from 'lucide-react';
+import OurTeam from '../components/OurTeam';
 import './Landing.css';
 
 const Landing = () => {
   const navigate = useNavigate();
   const { isDark, toggleTheme } = useTheme();
   const [liveStats, setLiveStats] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Fetch live platform stats from public API
   useEffect(() => {
@@ -86,16 +88,51 @@ const Landing = () => {
           <img src="/logo.jpg" alt="SmartCity" className="nav-logo-img" />
           <span className="nav-logo-text">SmartCity</span>
         </div>
+        
+        {/* Desktop Nav */}
         <div className="nav-links">
-          <a href="#features">Features</a>
-          <a href="#how-it-works">How It Works</a>
-          <a href="#tech">Tech Stack</a>
+          <a href="#">Home</a>
+          <a href="#features">About</a>
+          <a href="#how-it-works">Mission</a>
+          <a href="#team">Team</a>
+          <a href="#contact">Contact</a>
           <button className="theme-toggle-nav" onClick={toggleTheme} aria-label="Toggle Theme">
             {isDark ? <Sun size={18} /> : <Moon size={18} />}
           </button>
+          <a href="#" className="btn btn-hero-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.4rem 1rem' }}>
+            <Download size={14} /> Download App
+          </a>
           <button className="btn btn-primary nav-cta" onClick={() => navigate('/login')}>
             Launch App <ArrowRight size={14} />
           </button>
+        </div>
+
+        {/* Mobile controls */}
+        <div className="nav-mobile-controls">
+          <button className="theme-toggle-nav" onClick={toggleTheme} aria-label="Toggle Theme">
+            {isDark ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+          <button className="mobile-menu-toggle" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+
+        {/* Mobile Nav Overlay */}
+        <div className={`mobile-nav-overlay ${mobileMenuOpen ? 'open' : ''}`}>
+          <div className="mobile-nav-links">
+            <a href="#" onClick={() => setMobileMenuOpen(false)}>Home</a>
+            <a href="#features" onClick={() => setMobileMenuOpen(false)}>About</a>
+            <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)}>Mission</a>
+            <a href="#team" onClick={() => setMobileMenuOpen(false)}>Team</a>
+            <a href="#contact" onClick={() => setMobileMenuOpen(false)}>Contact</a>
+            
+            <a href="#" className="btn btn-hero-outline mb-3" style={{ justifyContent: 'center' }}>
+              <Download size={16} /> Download App
+            </a>
+            <button className="btn btn-primary" onClick={() => navigate('/login')} style={{ justifyContent: 'center' }}>
+              Launch App <ArrowRight size={16} />
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -118,7 +155,10 @@ const Landing = () => {
             <button className="btn btn-hero-primary" onClick={() => navigate('/login')}>
               <Zap size={16} /> Get Started <ArrowRight size={16} />
             </button>
-            <a href="#features" className="btn btn-hero-outline">
+            <a href="#" className="btn btn-hero-outline">
+              <Download size={16} /> Download App
+            </a>
+            <a href="#features" className="btn btn-hero-outline" style={{ border: 'none' }}>
               Explore Features <ChevronRight size={16} />
             </a>
           </div>
@@ -329,6 +369,11 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* Team Section */}
+      <section id="team" style={{ position: 'relative', zIndex: 10 }}>
+        <OurTeam />
+      </section>
+
       {/* CTA Section */}
       <section className="cta-section">
         <div className="cta-bg-glow" />
@@ -340,16 +385,18 @@ const Landing = () => {
       </section>
 
       {/* Footer */}
-      <footer className="landing-footer">
+      <footer className="landing-footer" id="contact">
         <div className="footer-content">
           <div className="footer-brand">
             <img src="/logo.jpg" alt="SmartCity" className="footer-logo-img" />
             <span>SmartCity Command & Control</span>
           </div>
           <div className="footer-links">
-            <a href="#features">Features</a>
-            <a href="#how-it-works">How It Works</a>
-            <a href="#tech">Tech Stack</a>
+            <a href="#">Home</a>
+            <a href="#features">About</a>
+            <a href="#how-it-works">Mission</a>
+            <a href="#team">Team</a>
+            <a href="#contact">Contact</a>
           </div>
           <div className="footer-social">
             <a href="https://github.com" target="_blank" rel="noreferrer"><Github size={18} /></a>

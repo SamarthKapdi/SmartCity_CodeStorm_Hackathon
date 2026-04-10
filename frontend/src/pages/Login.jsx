@@ -7,8 +7,8 @@ import './Login.css';
 const Login = () => {
   const [isRegister, setIsRegister] = useState(false);
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('admin@smartcity.com');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [errorDetails, setErrorDetails] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -62,8 +62,8 @@ const Login = () => {
       setPassword('');
       setName('');
     } else {
-      setEmail('admin@smartcity.com');
-      setPassword('admin123');
+      setEmail('');
+      setPassword('');
     }
   };
 
@@ -172,15 +172,6 @@ const Login = () => {
         {isRegister && (
           <div className="register-note">
             <p>Registering as a <strong>Citizen</strong> allows you to file and track complaints.</p>
-          </div>
-        )}
-
-        {!isRegister && (
-          <div className="login-credentials">
-            <span className="cred-title">Demo Credentials</span>
-            <div className="cred-item"><strong>Admin:</strong> admin@smartcity.com / admin123</div>
-            <div className="cred-item"><strong>Operator:</strong> traffic@smartcity.com / operator123</div>
-            <div className="cred-item"><strong>Citizen:</strong> rahul@citizen.com / citizen123</div>
           </div>
         )}
       </div>
