@@ -23,6 +23,10 @@ import {
   Bot,
   Megaphone,
   Satellite,
+  Map,
+  BarChart3,
+  Siren,
+  Users,
 } from 'lucide-react'
 import './Sidebar.css'
 
@@ -63,10 +67,18 @@ const Sidebar = () => {
       icon: MessageSquare,
     })
 
+    // Emergency — all roles
+    items.push({
+      path: '/emergency',
+      label: 'Emergency',
+      icon: Siren,
+    })
+
     if (isAdmin || isOperator) {
       // Admin and operators see full city modules
       items.unshift(
         { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { path: '/map', label: 'Live Map', icon: Map },
         { path: '/traffic', label: 'Traffic', icon: Car },
         { path: '/waste', label: 'Waste', icon: Trash2 },
         { path: '/water', label: 'Water', icon: Droplets },
@@ -78,7 +90,7 @@ const Sidebar = () => {
     }
 
     if (isUser) {
-      // Citizens only see complaints (already added above)
+      // Citizens see dashboard, complaints (already added), assistant, announcements
       items.unshift({
         path: '/dashboard',
         label: 'Dashboard',
@@ -100,9 +112,11 @@ const Sidebar = () => {
 
   const adminItems = isAdmin
     ? [
+        { path: '/analytics', label: 'Analytics', icon: BarChart3 },
+        { path: '/admin/panel', label: 'User Management', icon: Users },
         {
           path: '/admin/announcements',
-          label: 'City Announcements',
+          label: 'Announcements',
           icon: Megaphone,
         },
         { path: '/logs', label: 'Activity Logs', icon: ScrollText },
@@ -115,9 +129,7 @@ const Sidebar = () => {
     <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
         <div className="sidebar-logo">
-          <div className="logo-icon">
-            <Zap size={20} />
-          </div>
+          <img src="/logo.jpg" alt="SmartCity" style={{ width: 34, height: 34, borderRadius: 10, objectFit: 'cover' }} />
           {!collapsed && (
             <div className="logo-text">
               <span className="logo-title">SmartCity</span>
@@ -202,6 +214,7 @@ const Sidebar = () => {
               <span className="user-role">
                 <Shield size={11} />
                 {user?.role}
+                {user?.zone && <span style={{ marginLeft: 4, opacity: 0.7 }}>• {user.zone}</span>}
               </span>
             </div>
           )}

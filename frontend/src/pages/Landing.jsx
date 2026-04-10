@@ -1,15 +1,34 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
+import { analyticsAPI } from '../services/api';
 import {
   Zap, Brain, Shield, Wifi, BarChart3, Users, ArrowRight,
   CheckCircle, Bot, Bell, MapPin, Clock, ChevronRight,
-  Github, Mail, Globe, Sparkles, Activity, Target, Sun, Moon
+  Github, Mail, Globe, Sparkles, Activity, Target, Sun, Moon,
+  Map, Siren, Satellite
 } from 'lucide-react';
 import './Landing.css';
 
 const Landing = () => {
   const navigate = useNavigate();
   const { isDark, toggleTheme } = useTheme();
+  const [liveStats, setLiveStats] = useState(null);
+
+  // Fetch live platform stats from public API
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await analyticsAPI.overview();
+        setLiveStats(res.data.data);
+      } catch (err) {
+        console.error('Live stats error:', err);
+      }
+    };
+    fetchStats();
+    const interval = setInterval(fetchStats, 60000); // refresh every minute
+    return () => clearInterval(interval);
+  }, []);
 
   const features = [
     { icon: Brain, title: 'AI-Powered Analysis', desc: 'Gemini AI processes complaints, auto-detects priority, and predicts issue spikes across city zones.', color: '#8b5cf6' },
@@ -33,33 +52,38 @@ const Landing = () => {
     { name: 'MongoDB', desc: 'NoSQL Database', color: '#4db33d' },
     { name: 'Socket.io', desc: 'Real-Time Engine', color: '#010101' },
     { name: 'Gemini AI', desc: 'Intelligence Layer', color: '#8b5cf6' },
-    { name: 'JWT + RBAC', desc: 'Security Framework', color: '#ef4444' },
+    { name: 'JWT + RBAC', desc: 'Security', color: '#ef4444' },
+    { name: 'Tailwind', desc: 'Utility CSS', color: '#06b6d4' },
+    { name: 'Leaflet', desc: 'Live Maps', color: '#199900' },
   ];
 
   return (
     <div className="landing-page">
-      {/* Animated Background */}
+      {/* Video Background */}
+      <div className="landing-video-bg">
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="landing-video"
+        >
+          <source src="/LandingAnimation.mp4" type="video/mp4" />
+        </video>
+        <div className="landing-video-overlay" />
+      </div>
+
+      {/* Animated Glows on top of video */}
       <div className="landing-bg">
-        <div className="bg-grid" />
         <div className="bg-glow bg-glow-1" />
         <div className="bg-glow bg-glow-2" />
         <div className="bg-glow bg-glow-3" />
-        <div className="floating-particles">
-          {[...Array(20)].map((_, i) => (
-            <div key={i} className="particle" style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 5}s`,
-              animationDuration: `${3 + Math.random() * 4}s`
-            }} />
-          ))}
-        </div>
       </div>
 
       {/* Navigation */}
       <nav className="landing-nav">
         <div className="nav-brand">
-          <div className="nav-logo-icon"><Zap size={20} /></div>
+          <img src="/logo.jpg" alt="SmartCity" className="nav-logo-img" />
           <span className="nav-logo-text">SmartCity</span>
         </div>
         <div className="nav-links">
@@ -100,24 +124,25 @@ const Landing = () => {
           </div>
           <div className="hero-stats">
             <div className="hero-stat">
-              <span className="hero-stat-value">5</span>
-              <span className="hero-stat-label">City Modules</span>
+              <span className="hero-stat-value">{liveStats ? liveStats.complaints?.total || 0 : '—'}</span>
+              <span className="hero-stat-label">Complaints Filed</span>
             </div>
             <div className="hero-stat-divider" />
             <div className="hero-stat">
-              <span className="hero-stat-value">3</span>
-              <span className="hero-stat-label">RBAC Roles</span>
+              <span className="hero-stat-value">{liveStats ? `${liveStats.resolutionRate || 0}%` : '—'}</span>
+              <span className="hero-stat-label">Resolved</span>
             </div>
             <div className="hero-stat-divider" />
             <div className="hero-stat">
-              <span className="hero-stat-value">AI</span>
-              <span className="hero-stat-label">Powered</span>
+              <span className="hero-stat-value">{liveStats ? liveStats.devices?.total || 0 : '—'}</span>
+              <span className="hero-stat-label">IoT Devices</span>
             </div>
             <div className="hero-stat-divider" />
             <div className="hero-stat">
-              <span className="hero-stat-value">Live</span>
-              <span className="hero-stat-label">WebSockets</span>
+              <span className="hero-stat-value">{liveStats ? liveStats.users || 0 : '—'}</span>
+              <span className="hero-stat-label">Active Users</span>
             </div>
+            {liveStats && <div className="hero-stat-live"><span className="live-dot" />LIVE DATA</div>}
           </div>
         </div>
         <div className="hero-visual">
@@ -257,6 +282,35 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* Live Stats Banner */}
+      {liveStats && (
+        <section className="live-stats-section">
+          <div className="section-header">
+            <span className="section-badge" style={{ background: 'rgba(16,185,129,0.12)', color: '#10b981' }}>Live Platform Data</span>
+            <h2>Real-Time City Intelligence</h2>
+            <p>These numbers update live from our production database.</p>
+          </div>
+          <div className="live-stats-grid">
+            {[
+              { label: 'Total Complaints', value: liveStats.complaints?.total || 0, icon: <BarChart3 size={22} />, color: '#3b82f6' },
+              { label: 'Resolved', value: liveStats.complaints?.resolved || 0, icon: <CheckCircle size={22} />, color: '#10b981' },
+              { label: 'Resolution Rate', value: `${liveStats.resolutionRate || 0}%`, icon: <Target size={22} />, color: '#8b5cf6' },
+              { label: 'IoT Devices', value: liveStats.devices?.total || 0, icon: <Satellite size={22} />, color: '#06b6d4' },
+              { label: 'Devices Online', value: liveStats.devices?.online || 0, icon: <Wifi size={22} />, color: '#10b981' },
+              { label: 'Active Users', value: liveStats.users || 0, icon: <Users size={22} />, color: '#f59e0b' },
+              { label: 'Incidents Tracked', value: liveStats.incidents?.total || 0, icon: <Siren size={22} />, color: '#ef4444' },
+              { label: 'Incidents Resolved', value: liveStats.incidents?.resolved || 0, icon: <Shield size={22} />, color: '#10b981' },
+            ].map((stat) => (
+              <div key={stat.label} className="live-stat-card">
+                <div className="live-stat-icon" style={{ background: `${stat.color}15`, color: stat.color }}>{stat.icon}</div>
+                <div className="live-stat-value" style={{ color: stat.color }}>{stat.value}</div>
+                <div className="live-stat-label">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Tech Stack */}
       <section className="tech-section" id="tech">
         <div className="section-header">
@@ -281,7 +335,7 @@ const Landing = () => {
         <h2>Ready to Transform Your City?</h2>
         <p>Experience the future of urban management with AI-powered intelligence.</p>
         <button className="btn btn-hero-primary" onClick={() => navigate('/login')}>
-          <Zap size={16} /> Launch Command Center <ArrowRight size={16} />
+          <img src="/logo.jpg" alt="" className="cta-logo-img" /> Launch Command Center <ArrowRight size={16} />
         </button>
       </section>
 
@@ -289,7 +343,7 @@ const Landing = () => {
       <footer className="landing-footer">
         <div className="footer-content">
           <div className="footer-brand">
-            <div className="nav-logo-icon"><Zap size={18} /></div>
+            <img src="/logo.jpg" alt="SmartCity" className="footer-logo-img" />
             <span>SmartCity Command & Control</span>
           </div>
           <div className="footer-links">
@@ -304,7 +358,7 @@ const Landing = () => {
           </div>
         </div>
         <div className="footer-bottom">
-          <span>© 2026 SmartCity Platform. Built for CodeStorm Hackathon.</span>
+          <span>© 2026 SmartCity Platform — Intelligent Urban Management System.</span>
         </div>
       </footer>
     </div>

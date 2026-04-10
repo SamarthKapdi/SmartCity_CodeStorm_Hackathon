@@ -51,8 +51,7 @@ export const trafficAPI = {
   getStats: () => api.get('/traffic/stats'),
   create: (data) => api.post('/traffic', data),
   update: (id, data) => api.put(`/traffic/${id}`, data),
-  reportIncident: (id, data) =>
-    api.post(`/traffic/${id}/report-incident`, data),
+  reportIncident: (id, data) => api.post(`/traffic/${id}/report-incident`, data),
   emergencyOverride: (id) => api.post(`/traffic/${id}/emergency-override`),
   clearOverride: (id) => api.post(`/traffic/${id}/clear-override`),
   predict: (zone) => api.get(`/traffic/predict/${zone}`),
@@ -120,11 +119,18 @@ export const complaintAPI = {
   getAll: (params) => api.get('/complaints', { params }),
   getStats: () => api.get('/complaints/stats'),
   getOne: (id) => api.get(`/complaints/${id}`),
-  create: (data) => api.post('/complaints', data),
+  create: (data) => {
+    // Support FormData (for image uploads)
+    if (data instanceof FormData) {
+      return api.post('/complaints', data, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+    }
+    return api.post('/complaints', data)
+  },
   assign: (id, data) => api.put(`/complaints/${id}/assign`, data),
   updateStatus: (id, data) => api.put(`/complaints/${id}/status`, data),
-  suggestOperator: (params) =>
-    api.get('/complaints/suggest-operator', { params }),
+  suggestOperator: (params) => api.get('/complaints/suggest-operator', { params }),
   checkOverdue: () => api.post('/complaints/overdue/check'),
 }
 
@@ -152,15 +158,40 @@ export const iotAPI = {
   getSummary: () => api.get('/iot/summary'),
   getDevices: (params) => api.get('/iot/devices', { params }),
   getDevice: (deviceId) => api.get(`/iot/devices/${deviceId}`),
+  getDeviceTelemetry: (deviceId, params) => api.get(`/iot/devices/${deviceId}/telemetry`, { params }),
   registerDevice: (data) => api.post('/iot/devices/register', data),
-  connectDevice: (deviceId, data) =>
-    api.post(`/iot/devices/${deviceId}/connect`, data),
-  heartbeatDevice: (deviceId, data) =>
-    api.post(`/iot/devices/${deviceId}/heartbeat`, data),
-  disconnectDevice: (deviceId, data) =>
-    api.post(`/iot/devices/${deviceId}/disconnect`, data),
-  sendTelemetry: (deviceId, data) =>
-    api.post(`/iot/devices/${deviceId}/telemetry`, data),
+  connectDevice: (deviceId, data) => api.post(`/iot/devices/${deviceId}/connect`, data),
+  heartbeatDevice: (deviceId, data) => api.post(`/iot/devices/${deviceId}/heartbeat`, data),
+  disconnectDevice: (deviceId, data) => api.post(`/iot/devices/${deviceId}/disconnect`, data),
+  sendTelemetry: (deviceId, data) => api.post(`/iot/devices/${deviceId}/telemetry`, data),
+}
+
+// Emergency API (NEW)
+export const emergencyAPI = {
+  createSOS: (data) => api.post('/emergency/sos', data),
+  getFeed: (params) => api.get('/emergency/feed', { params }),
+  respond: (id) => api.put(`/emergency/${id}/respond`),
+  resolve: (id) => api.put(`/emergency/${id}/resolve`),
+}
+
+// Analytics API (NEW)
+export const analyticsAPI = {
+  complaintTrends: (params) => api.get('/analytics/complaints', { params }),
+  moduleStats: () => api.get('/analytics/modules'),
+  operatorPerformance: () => api.get('/analytics/performance'),
+  overview: () => api.get('/analytics/overview'),
+}
+
+// Admin API (NEW)
+export const adminAPI = {
+  getUsers: (params) => api.get('/admin/users', { params }),
+  updateUser: (id, data) => api.put(`/admin/users/${id}`, data),
+  deactivateUser: (id) => api.delete(`/admin/users/${id}`),
+}
+
+// Map API (NEW)
+export const mapAPI = {
+  getData: (params) => api.get('/map/data', { params }),
 }
 
 export default api

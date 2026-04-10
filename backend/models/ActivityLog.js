@@ -30,6 +30,9 @@ const activityLogSchema = new mongoose.Schema(
         'dashboard',
         'complaints',
         'iot',
+        'announcements',
+        'analytics',
+        'admin',
       ],
     },
     details: {

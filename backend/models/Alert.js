@@ -9,7 +9,7 @@ const alertSchema = new mongoose.Schema({
   module: {
     type: String,
     required: true,
-    enum: ['traffic', 'waste', 'water', 'lighting', 'emergency', 'system']
+    enum: ['traffic', 'waste', 'water', 'lighting', 'emergency', 'system', 'iot']
   },
   title: {
     type: String,
@@ -25,6 +25,11 @@ const alertSchema = new mongoose.Schema({
     type: String,
     enum: ['low', 'medium', 'high', 'critical'],
     default: 'medium'
+  },
+  zone: {
+    type: String,
+    enum: ['north', 'south', 'east', 'west', 'central', 'all'],
+    default: 'all'
   },
   read: {
     type: Boolean,
@@ -50,5 +55,6 @@ const alertSchema = new mongoose.Schema({
 alertSchema.index({ read: 1, priority: -1 });
 alertSchema.index({ createdAt: -1 });
 alertSchema.index({ module: 1 });
+alertSchema.index({ zone: 1 });
 
 module.exports = mongoose.model('Alert', alertSchema);

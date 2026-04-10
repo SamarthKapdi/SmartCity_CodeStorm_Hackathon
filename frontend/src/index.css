@@ -1,5 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   /* Base colors */
   --bg-primary: #0a0e1a;
@@ -736,3 +740,344 @@ button {
   scrollbar-color: var(--bg-card) transparent;
 }
 
+/* ═══════════════════════════════════════
+   DATA TABLE
+   ═══════════════════════════════════════ */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.data-table thead {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.data-table th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.data-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.data-table tbody tr:hover {
+  background: var(--bg-card-hover);
+}
+
+/* ═══════════════════════════════════════
+   EMERGENCY CRITICAL BLINK
+   ═══════════════════════════════════════ */
+.critical-blink {
+  animation: criticalPulse 2s ease-in-out infinite;
+}
+
+@keyframes criticalPulse {
+  0%, 100% { border-color: var(--border-color); }
+  50% { border-color: #ef4444; box-shadow: 0 0 20px rgba(239, 68, 68, 0.15); }
+}
+
+/* ═══════════════════════════════════════
+   ADDITIONAL BADGE VARIANTS
+   ═══════════════════════════════════════ */
+.badge-critical {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.badge-yellow {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.badge-blue {
+  background: rgba(59, 130, 246, 0.12);
+  color: #3b82f6;
+}
+
+/* ═══════════════════════════════════════
+   BUTTON VARIANTS
+   ═══════════════════════════════════════ */
+.btn-danger {
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  color: white;
+  border: none;
+}
+
+.btn-danger:hover {
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #059669, #10b981);
+  color: white;
+  border: none;
+}
+
+.btn-success:hover {
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+  transform: translateY(-1px);
+}
+
+/* ═══════════════════════════════════════
+   FILTER BAR (INLINE)
+   ═══════════════════════════════════════ */
+.filter-bar {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filter-bar select,
+.filter-bar input {
+  padding: 0.55rem 0.9rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  transition: border-color 0.2s;
+}
+
+.filter-bar select:focus,
+.filter-bar input:focus {
+  border-color: var(--accent-blue);
+  outline: none;
+}
+
+/* ═══════════════════════════════════════
+   EMPTY STATE
+   ═══════════════════════════════════════ */
+.empty-state {
+  padding: 3rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+/* ═══════════════════════════════════════
+   MODAL ENHANCEMENTS
+   ═══════════════════════════════════════ */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+/* ═══════════════════════════════════════
+   PAGE HEADER
+   ═══════════════════════════════════════ */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.page-header h1 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-primary);
+}
+
+.page-header p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* ═══════════════════════════════════════
+   COMPREHENSIVE LIGHT THEME OVERRIDES
+   Ensures ALL app components look correct
+   when data-theme="light" is active
+   ═══════════════════════════════════════ */
+
+/* Glass panels */
+[data-theme="light"] .glass {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+/* Body & Root */
+[data-theme="light"] body {
+  background: var(--bg-primary);
+}
+
+/* Toast notifications */
+[data-theme="light"] .toast {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .toast-message {
+  color: var(--text-primary);
+}
+
+/* Modal overlay */
+[data-theme="light"] .modal-overlay {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .modal-content {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+/* Sidebar */
+[data-theme="light"] .sidebar {
+  background: #ffffff;
+  border-right-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .sidebar-header {
+  border-bottom-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .sidebar-footer {
+  border-top-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .nav-item:hover {
+  background: #f1f5f9;
+}
+
+[data-theme="light"] .nav-item.active {
+  background: rgba(59, 130, 246, 0.08);
+}
+
+[data-theme="light"] .collapse-btn:hover {
+  background: #f1f5f9;
+}
+
+/* Main content area */
+[data-theme="light"] .main-content {
+  background: var(--bg-primary);
+}
+
+/* Recharts tooltip (used in Analytics, Dashboard, Complaints) */
+[data-theme="light"] .recharts-tooltip-wrapper .recharts-default-tooltip {
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  color: #1e293b !important;
+}
+
+/* Global Recharts overrides for light mode (handles hardcoded dark SVGs) */
+[data-theme="light"] .recharts-cartesian-grid line {
+  stroke: rgba(0, 0, 0, 0.08) !important;
+}
+
+[data-theme="light"] .recharts-cartesian-axis-tick-value {
+  fill: #475569 !important;
+}
+
+[data-theme="light"] .recharts-text {
+  fill: #475569 !important;
+}
+
+[data-theme="light"] .pie-legend {
+  color: #475569;
+}
+
+/* Stat cards with hardcoded icon backgrounds */
+[data-theme="light"] .stat-card {
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+}
+
+[data-theme="light"] .stat-icon {
+  opacity: 0.9;
+}
+
+/* Card hover glow — lighter in light mode */
+[data-theme="light"] .card::before {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.04), rgba(139, 92, 246, 0.04));
+}
+
+/* Button outlines */
+[data-theme="light"] .btn-outline {
+  border-color: rgba(0, 0, 0, 0.12);
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .btn-outline:hover {
+  border-color: var(--accent-blue);
+  background: rgba(59, 130, 246, 0.05);
+}
+
+/* Overdue cards */
+[data-theme="light"] .overdue-card {
+  background: rgba(239, 68, 68, 0.04) !important;
+}
+
+/* Data table */
+[data-theme="light"] .data-table thead {
+  background: #f8f9fc;
+}
+
+[data-theme="light"] .data-table tbody tr:hover {
+  background: #f1f5f9;
+}
+
+/* Page header gradient text — use solid color in light */
+[data-theme="light"] .page-header h1 {
+  background: none;
+  -webkit-background-clip: unset;
+  -webkit-text-fill-color: #1e293b;
+  color: #1e293b;
+}
+
+/* Skeleton loaders */
+[data-theme="light"] .skeleton {
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+  background-size: 200% 100%;
+}
+
+/* Select / input elements in filter bars */
+[data-theme="light"] select,
+[data-theme="light"] .filter-bar select {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #1e293b;
+}
+
+/* Charts section cards */
+[data-theme="light"] .chart-section {
+  background: var(--bg-card);
+}
+
+/* Complaints module page */
+[data-theme="light"] .complaint-card {
+  background: var(--bg-card);
+}
+
+/* Leaflet map popup */
+[data-theme="light"] .leaflet-popup-content-wrapper {
+  background: #ffffff;
+  color: #1e293b;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .leaflet-popup-tip {
+  background: #ffffff;
+}

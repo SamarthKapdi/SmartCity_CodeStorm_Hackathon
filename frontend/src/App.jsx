@@ -18,6 +18,10 @@ import Complaints from './pages/Complaints'
 import CitizenAssistant from './pages/CitizenAssistant'
 import Announcements from './pages/Announcements'
 import CitizenAnnouncements from './pages/CitizenAnnouncements'
+import LiveMap from './pages/LiveMap'
+import Analytics from './pages/Analytics'
+import AdminPanel from './pages/AdminPanel'
+import EmergencyPage from './pages/EmergencyPage'
 import './index.css'
 
 const ProtectedRoute = ({ children, roles = [] }) => {
@@ -131,6 +135,29 @@ const AppRoutes = () => {
           }
         />
 
+        {/* NEW: Live Map — admin + operator */}
+        <Route
+          path="map"
+          element={
+            <ProtectedRoute roles={['admin', 'operator']}>
+              <LiveMap />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* NEW: Analytics — admin only */}
+        <Route
+          path="analytics"
+          element={
+            <ProtectedRoute roles={['admin']}>
+              <Analytics />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* NEW: Emergency — all roles */}
+        <Route path="emergency" element={<EmergencyPage />} />
+
         {/* Complaints — all roles */}
         <Route path="complaints" element={<Complaints />} />
 
@@ -158,6 +185,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute roles={['admin']}>
               <Announcements />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="admin/panel"
+          element={
+            <ProtectedRoute roles={['admin']}>
+              <AdminPanel />
             </ProtectedRoute>
           }
         />

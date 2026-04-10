@@ -33,6 +33,20 @@ const userSchema = new mongoose.Schema({
     enum: ['traffic', 'waste', 'water', 'lighting', 'emergency', 'general'],
     default: 'general'
   },
+  zone: {
+    type: String,
+    enum: ['north', 'south', 'east', 'west', 'central'],
+    default: 'central'
+  },
+  phone: {
+    type: String,
+    default: '',
+    trim: true
+  },
+  avatar: {
+    type: String,
+    default: ''
+  },
   isActive: {
     type: Boolean,
     default: true
@@ -52,5 +66,8 @@ userSchema.pre('save', async function(next) {
 userSchema.methods.comparePassword = async function(candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
+
+userSchema.index({ role: 1, isActive: 1 });
+userSchema.index({ zone: 1 });
 
 module.exports = mongoose.model('User', userSchema);

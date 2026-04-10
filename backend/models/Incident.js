@@ -16,6 +16,10 @@ const incidentSchema = new mongoose.Schema({
     required: [true, 'Location is required'],
     trim: true
   },
+  coordinates: {
+    lat: { type: Number, default: null },
+    lng: { type: Number, default: null }
+  },
   zone: {
     type: String,
     required: true,
@@ -60,5 +64,7 @@ const incidentSchema = new mongoose.Schema({
 
 incidentSchema.index({ status: 1, priority: -1 });
 incidentSchema.index({ createdAt: -1 });
+incidentSchema.index({ zone: 1 });
+incidentSchema.index({ 'coordinates.lat': 1, 'coordinates.lng': 1 });
 
 module.exports = mongoose.model('Incident', incidentSchema);

@@ -4,9 +4,10 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import socketService from '../services/socket';
 import AIInsights from '../components/AIInsights';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  MessageSquare, MapPin, Clock, User, RefreshCw, Plus, X,
-  CheckCircle, AlertTriangle, ArrowRight, Timer, Award, Zap, Brain
+  MessageSquare, MapPin, Clock, User, RefreshCw, Plus, X, Image,
+  CheckCircle, AlertTriangle, ArrowRight, Timer, Award, Zap, Brain, History
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -28,7 +29,8 @@ const Complaints = () => {
   const [showStatusModal, setShowStatusModal] = useState(null);
   const [operators, setOperators] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
-  const [form, setForm] = useState({ title: '', description: '', category: 'traffic', location: '', zone: 'central' });
+  const [form, setForm] = useState({ title: '', description: '', category: 'traffic', location: '', zone: 'central', image: null });
+  const [imagePreview, setImagePreview] = useState(null);
   const [assignForm, setAssignForm] = useState({ assignedTo: '', priority: 'medium', deadline: '' });
   const [statusForm, setStatusForm] = useState({ status: '', remark: '' });
   const { isAdmin, isOperator, isUser, user } = useAuth();
@@ -94,17 +96,33 @@ const Complaints = () => {
 
   useEffect(() => { fetchData(); }, [filter]);
 
-  // Create complaint (citizen only)
+  // Create complaint (citizen only) — with image upload
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
-      await complaintAPI.create(form);
+      const formData = new FormData();
+      formData.append('title', form.title);
+      formData.append('description', form.description);
+      formData.append('category', form.category);
+      formData.append('location', form.location);
+      formData.append('zone', form.zone);
+      if (form.image) formData.append('image', form.image);
+      await complaintAPI.create(formData);
       setShowModal(false);
-      setForm({ title: '', description: '', category: 'traffic', location: '', zone: 'central' });
+      setForm({ title: '', description: '', category: 'traffic', location: '', zone: 'central', image: null });
+      setImagePreview(null);
       toast.success('Complaint submitted successfully!');
       fetchData();
     } catch (err) { 
       toast.error(err.response?.data?.message || 'Failed to submit complaint');
+    }
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setForm(f => ({ ...f, image: file }));
+      setImagePreview(URL.createObjectURL(file));
     }
   };
 
@@ -281,8 +299,16 @@ const Complaints = () => {
 
       {/* Complaint Cards */}
       <div className="card-grid">
-        {complaints.map(c => (
-          <div key={c._id} className={`complaint-card priority-border-${c.priority} ${c.isOverdue ? 'overdue-card' : ''}`}>
+        <AnimatePresence>
+        {complaints.map((c, idx) => (
+          <motion.div
+            key={c._id}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ delay: idx * 0.03 }}
+            className={`complaint-card priority-border-${c.priority} ${c.isOverdue ? 'overdue-card' : ''}`}
+          >
             <div className="complaint-header">
               <h4>{c.title}</h4>
               <span className={`badge badge-${c.priority}`}>{c.priority}</span>
@@ -292,6 +318,11 @@ const Complaints = () => {
               <span className="badge" style={{ background: 'rgba(139,92,246,0.12)', color: '#8b5cf6' }}>{c.category}</span>
               {c.isOverdue && <span className="badge badge-red">⏰ OVERDUE</span>}
             </div>
+            {c.imageUrl && (
+              <div style={{ margin: '0.5rem 0', borderRadius: 8, overflow: 'hidden', maxHeight: 180 }}>
+                <img src={`http://localhost:5000${c.imageUrl}`} alt="Complaint" style={{ width: '100%', objectFit: 'cover', borderRadius: 8 }} />
+              </div>
+            )}
             <p className="complaint-desc">{c.description}</p>
             <div className="item-details">
               <span><MapPin size={13} /> {c.location} ({c.zone})</span>
@@ -301,6 +332,26 @@ const Complaints = () => {
               {c.assignedTo && <span><User size={13} /> Assigned: {c.assignedTo.name} ({c.assignedTo.department})</span>}
               {c.resolutionTimeMinutes && <span>⏱ Resolved in {c.resolutionTimeMinutes} min</span>}
             </div>
+
+            {/* Status Timeline */}
+            {c.statusHistory && c.statusHistory.length > 0 && (
+              <div className="status-timeline" style={{ margin: '0.75rem 0 0.5rem', padding: '0.5rem 0 0', borderTop: '1px solid var(--border-color)' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4, marginBottom: '0.4rem', color: 'var(--text-muted)' }}>
+                  <History size={12} /> Status History
+                </span>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  {c.statusHistory.map((sh, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.7rem' }}>
+                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: STATUS_COLORS[sh.status] || '#64748b' }} />
+                      <span style={{ fontWeight: 600, color: STATUS_COLORS[sh.status] }}>{sh.status}</span>
+                      <span style={{ color: 'var(--text-muted)' }}>by {sh.changedByName}{sh.remark ? ` — "${sh.remark}"` : ''}</span>
+                      {i < c.statusHistory.length - 1 && <span style={{ color: 'var(--text-muted)' }}>→</span>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {c.remarks && c.remarks.length > 0 && (
               <div className="remarks-section">
                 <span className="remarks-title">Remarks:</span>
@@ -324,15 +375,16 @@ const Complaints = () => {
                 </button>
               )}
             </div>
-          </div>
+          </motion.div>
         ))}
+        </AnimatePresence>
       </div>
       {complaints.length === 0 && <div className="empty-state"><p>No complaints found</p></div>}
 
       {/* Create Complaint Modal (citizen) */}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 600 }}>
             <div className="modal-header-row">
               <h2>File a Complaint</h2>
               <button className="btn btn-sm btn-outline" onClick={() => setShowModal(false)}><X size={14} /></button>
@@ -340,31 +392,45 @@ const Complaints = () => {
             <form onSubmit={handleCreate}>
               <div className="input-group">
                 <label>Title</label>
-                <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} required placeholder="Brief title of compliant" />
+                <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} required placeholder="Brief title of complaint" />
               </div>
-              <div className="input-group">
-                <label>Category</label>
-                <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>
-                  {['traffic', 'water', 'waste', 'lighting', 'emergency'].map(c => (
-                    <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
-                  ))}
-                </select>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="input-group">
+                  <label>Category</label>
+                  <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>
+                    {['traffic', 'water', 'waste', 'lighting', 'emergency'].map(c => (
+                      <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="input-group">
+                  <label>Zone</label>
+                  <select value={form.zone} onChange={e => setForm(f => ({ ...f, zone: e.target.value }))}>
+                    {['north', 'south', 'east', 'west', 'central'].map(z => (
+                      <option key={z} value={z}>{z.charAt(0).toUpperCase() + z.slice(1)}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
               <div className="input-group">
                 <label>Location</label>
                 <input value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} required placeholder="Where is the issue?" />
               </div>
               <div className="input-group">
-                <label>Zone</label>
-                <select value={form.zone} onChange={e => setForm(f => ({ ...f, zone: e.target.value }))}>
-                  {['north', 'south', 'east', 'west', 'central'].map(z => (
-                    <option key={z} value={z}>{z.charAt(0).toUpperCase() + z.slice(1)}</option>
-                  ))}
-                </select>
+                <label>Description</label>
+                <textarea rows={3} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} required placeholder="Describe the problem in detail..." />
               </div>
               <div className="input-group">
-                <label>Description</label>
-                <textarea rows={4} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} required placeholder="Describe the problem in detail..." />
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Image size={14} /> Attach Photo (optional)</label>
+                <input type="file" accept="image/*" onChange={handleImageChange} style={{ padding: '0.5rem' }} />
+                {imagePreview && (
+                  <div style={{ marginTop: '0.5rem', borderRadius: 8, overflow: 'hidden', maxHeight: 150 }}>
+                    <img src={imagePreview} alt="Preview" style={{ width: '100%', objectFit: 'cover', borderRadius: 8 }} />
+                    <button type="button" className="btn btn-sm btn-outline" style={{ marginTop: '0.5rem' }} onClick={() => { setForm(f => ({ ...f, image: null })); setImagePreview(null); }}>
+                      <X size={12} /> Remove
+                    </button>
+                  </div>
+                )}
               </div>
               <div className="modal-actions">
                 <button type="button" className="btn btn-outline" onClick={() => setShowModal(false)}>Cancel</button>

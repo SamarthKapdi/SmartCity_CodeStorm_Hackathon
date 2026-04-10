@@ -4,43 +4,43 @@ const User = require('../models/User');
 const ActivityLog = require('../models/ActivityLog');
 const auth = require('../middleware/auth');
 const roleCheck = require('../middleware/roleCheck');
+const validate = require('../middleware/validate');
+const { registerSchema, loginSchema, createUserSchema } = require('../validations/authSchemas');
 const router = express.Router();
 
 // POST /api/auth/register — public registration defaults to 'user' role
-router.post('/register', async (req, res, next) => {
+router.post('/register', validate(registerSchema), async (req, res, next) => {
   try {
-    const { name, email, password, role, department } = req.body;
-
-    if (!name || !email || !password) {
-      return res.status(400).json({ success: false, message: 'Name, email, and password are required.' });
-    }
+    const { name, email, password, zone, phone } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ success: false, message: 'Email already registered.' });
     }
 
-    // Public registration always creates 'user' role.  Only admin can create operator/admin via /users route.
+    // Public registration always creates 'user' role
     const user = await User.create({
       name, email, password,
       role: 'user',
-      department: department || 'general'
+      department: 'general',
+      zone: zone || 'central',
+      phone: phone || ''
     });
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
 
     await ActivityLog.create({
       userId: user._id,
       userName: user.name,
       action: 'User Registered',
       module: 'auth',
-      details: `New citizen account created for ${user.email}`
+      details: `New citizen account created for ${user.email} (zone: ${user.zone})`
     });
 
     res.status(201).json({
       success: true,
       data: {
-        user: { id: user._id, name: user.name, email: user.email, role: user.role, department: user.department },
+        user: { id: user._id, name: user.name, email: user.email, role: user.role, department: user.department, zone: user.zone },
         token
       }
     });
@@ -50,13 +50,9 @@ router.post('/register', async (req, res, next) => {
 });
 
 // POST /api/auth/login
-router.post('/login', async (req, res, next) => {
+router.post('/login', validate(loginSchema), async (req, res, next) => {
   try {
     const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ success: false, message: 'Email and password are required.' });
-    }
 
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
@@ -72,7 +68,7 @@ router.post('/login', async (req, res, next) => {
       return res.status(401).json({ success: false, message: 'Invalid email or password.' });
     }
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
 
     await ActivityLog.create({
       userId: user._id,
@@ -85,7 +81,7 @@ router.post('/login', async (req, res, next) => {
     res.json({
       success: true,
       data: {
-        user: { id: user._id, name: user.name, email: user.email, role: user.role, department: user.department },
+        user: { id: user._id, name: user.name, email: user.email, role: user.role, department: user.department, zone: user.zone },
         token
       }
     });
@@ -104,9 +100,10 @@ router.get('/me', auth, async (req, res) => {
 // GET /api/auth/users — list all users (admin only)
 router.get('/users', auth, roleCheck('admin'), async (req, res, next) => {
   try {
-    const { role } = req.query;
+    const { role, zone } = req.query;
     const filter = {};
     if (role) filter.role = role;
+    if (zone) filter.zone = zone;
     const users = await User.find(filter).select('-password').sort({ createdAt: -1 });
     res.json({ success: true, data: users });
   } catch (error) { next(error); }
@@ -115,32 +112,35 @@ router.get('/users', auth, roleCheck('admin'), async (req, res, next) => {
 // GET /api/auth/operators — list operators (admin only, for assignment dropdowns)
 router.get('/operators', auth, roleCheck('admin'), async (req, res, next) => {
   try {
-    const operators = await User.find({ role: 'operator', isActive: true }).select('name email department');
+    const operators = await User.find({ role: 'operator', isActive: true }).select('name email department zone');
     res.json({ success: true, data: operators });
   } catch (error) { next(error); }
 });
 
 // POST /api/auth/users — admin creates operator/admin accounts
-router.post('/users', auth, roleCheck('admin'), async (req, res, next) => {
+router.post('/users', auth, roleCheck('admin'), validate(createUserSchema), async (req, res, next) => {
   try {
-    const { name, email, password, role, department } = req.body;
-    if (!name || !email || !password || !role) {
-      return res.status(400).json({ success: false, message: 'All fields required.' });
-    }
+    const { name, email, password, role, department, zone, phone } = req.body;
+
     const existing = await User.findOne({ email });
     if (existing) return res.status(400).json({ success: false, message: 'Email already registered.' });
 
-    const user = await User.create({ name, email, password, role, department: department || 'general' });
+    const user = await User.create({
+      name, email, password, role,
+      department: department || 'general',
+      zone: zone || 'central',
+      phone: phone || ''
+    });
 
     await ActivityLog.create({
       userId: req.user.id, userName: req.user.name,
       action: 'Created User', module: 'auth',
-      details: `Admin created ${role} account: ${email}`
+      details: `Admin created ${role} account: ${email} (zone: ${zone || 'central'})`
     });
 
     res.status(201).json({
       success: true,
-      data: { id: user._id, name: user.name, email: user.email, role: user.role, department: user.department }
+      data: { id: user._id, name: user.name, email: user.email, role: user.role, department: user.department, zone: user.zone }
     });
   } catch (error) { next(error); }
 });

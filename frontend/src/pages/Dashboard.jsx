@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { dashboardAPI, announcementAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import AnnouncementCard from '../components/AnnouncementCard';
 import CityHealthCard from '../components/CityHealthCard';
 import {
@@ -21,6 +22,13 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const { user } = useAuth();
+  const { isDark } = useTheme();
+
+  const tooltipStyle = isDark
+    ? { background: '#1a1f35', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#f1f5f9' }
+    : { background: '#ffffff', border: '1px solid rgba(0,0,0,0.1)', borderRadius: '8px', color: '#1e293b' };
+  const gridStroke = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.08)';
+  const axisStroke = isDark ? '#64748b' : '#94a3b8';
 
   const fetchData = useCallback(async () => {
     try {
@@ -192,10 +200,10 @@ const Dashboard = () => {
             <h3><BarChart3 size={16} /> Your Complaint Type Counts</h3>
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={citizenCategoryData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="name" stroke="#64748b" fontSize={12} />
-                <YAxis stroke="#64748b" fontSize={12} />
-                <Tooltip contentStyle={{ background: '#1a1f35', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#f1f5f9' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+                <XAxis dataKey="name" stroke={axisStroke} fontSize={12} />
+                <YAxis stroke={axisStroke} fontSize={12} />
+                <Tooltip contentStyle={tooltipStyle} />
                 <Bar dataKey="value" radius={[6, 6, 0, 0]}>
                   {citizenCategoryData.map((entry, idx) => (
                     <Cell key={idx} fill={entry.fill} />
@@ -214,7 +222,7 @@ const Dashboard = () => {
                     <Cell key={idx} fill={entry.fill} />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{ background: '#1a1f35', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#f1f5f9' }} />
+                <Tooltip contentStyle={tooltipStyle} />
               </PieChart>
             </ResponsiveContainer>
             <div className="pie-legend">
@@ -408,17 +416,10 @@ const Dashboard = () => {
           <h3><BarChart3 size={16} /> Traffic Distribution</h3>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={trafficChartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="name" stroke="#64748b" fontSize={12} />
-              <YAxis stroke="#64748b" fontSize={12} />
-              <Tooltip
-                contentStyle={{
-                  background: '#1a1f35',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: '8px',
-                  color: '#f1f5f9'
-                }}
-              />
+              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+              <XAxis dataKey="name" stroke={axisStroke} fontSize={12} />
+              <YAxis stroke={axisStroke} fontSize={12} />
+              <Tooltip contentStyle={tooltipStyle} />
               <Bar dataKey="value" radius={[6, 6, 0, 0]}>
                 {trafficChartData.map((entry, idx) => (
                   <Cell key={idx} fill={entry.fill} />
@@ -443,14 +444,7 @@ const Dashboard = () => {
                   <Cell key={idx} fill={entry.fill} />
                 ))}
               </Pie>
-              <Tooltip
-                contentStyle={{
-                  background: '#1a1f35',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: '8px',
-                  color: '#f1f5f9'
-                }}
-              />
+              <Tooltip contentStyle={tooltipStyle} />
             </PieChart>
           </ResponsiveContainer>
           <div className="pie-legend">
@@ -467,17 +461,10 @@ const Dashboard = () => {
           <h3><Activity size={16} /> Module Health Scores</h3>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={moduleScores} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis type="number" domain={[0, 100]} stroke="#64748b" fontSize={12} />
-              <YAxis dataKey="name" type="category" stroke="#64748b" fontSize={12} width={80} />
-              <Tooltip
-                contentStyle={{
-                  background: '#1a1f35',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: '8px',
-                  color: '#f1f5f9'
-                }}
-              />
+              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+              <XAxis type="number" domain={[0, 100]} stroke={axisStroke} fontSize={12} />
+              <YAxis dataKey="name" type="category" stroke={axisStroke} fontSize={12} width={80} />
+              <Tooltip contentStyle={tooltipStyle} />
               <Bar dataKey="score" radius={[0, 6, 6, 0]} fill="#3b82f6" />
             </BarChart>
           </ResponsiveContainer>

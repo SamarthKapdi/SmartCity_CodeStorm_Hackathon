@@ -5,6 +5,9 @@ const ActivityLog = require('../models/ActivityLog');
 const Alert = require('../models/Alert');
 const auth = require('../middleware/auth');
 const roleCheck = require('../middleware/roleCheck');
+const validate = require('../middleware/validate');
+const upload = require('../middleware/upload');
+const { createComplaintSchema, assignComplaintSchema, updateStatusSchema } = require('../validations/complaintSchemas');
 const { getIo } = require('../utils/socket');
 const router = express.Router();
 
@@ -144,20 +147,28 @@ router.get('/:id', auth, async (req, res, next) => {
 });
 
 // ──────────────────────────────────────────────
-// POST /api/complaints — create (user only)
+// POST /api/complaints — create (user only, with optional image)
 // ──────────────────────────────────────────────
-router.post('/', auth, roleCheck('user'), async (req, res, next) => {
+router.post('/', auth, roleCheck('user'), upload.single('image'), async (req, res, next) => {
   try {
-    const { title, description, category, location, zone, priority } = req.body;
+    const { title, description, category, location, zone, priority, coordinates } = req.body;
     if (!title || !description || !category || !location) {
       return res.status(400).json({ success: false, message: 'Title, description, category, and location are required.' });
+    }
+
+    // Parse coordinates if stringified
+    let coords = {};
+    if (coordinates) {
+      try { coords = typeof coordinates === 'string' ? JSON.parse(coordinates) : coordinates; } catch (e) { /* ignore */ }
     }
 
     const complaint = new Complaint({
       title, description, category, location,
       zone: zone || 'central',
       priority: priority || 'medium',
-      createdBy: req.user.id
+      createdBy: req.user.id,
+      coordinates: coords,
+      imageUrl: req.file ? `/uploads/${req.file.filename}` : null
     });
     await complaint.save();
 
@@ -167,7 +178,8 @@ router.post('/', auth, roleCheck('user'), async (req, res, next) => {
       module: category,
       title: `New Complaint: ${title}`,
       message: `Citizen filed a ${category} complaint at ${location}. Priority: ${complaint.priority}.`,
-      priority: complaint.priority
+      priority: complaint.priority,
+      zone: zone || 'central'
     });
 
     await ActivityLog.create({
@@ -229,7 +241,7 @@ router.put('/:id/assign', auth, roleCheck('admin'), async (req, res, next) => {
 // ──────────────────────────────────────────────
 // PUT /api/complaints/:id/status — operator updates
 // ──────────────────────────────────────────────
-router.put('/:id/status', auth, roleCheck('operator'), async (req, res, next) => {
+router.put('/:id/status', auth, roleCheck('operator'), validate(updateStatusSchema), async (req, res, next) => {
   try {
     const { status, remark } = req.body;
     const complaint = await Complaint.findById(req.params.id);
@@ -249,10 +261,22 @@ router.put('/:id/status', auth, roleCheck('operator'), async (req, res, next) =>
       });
     }
 
+    const previousStatus = complaint.status;
     if (status) complaint.status = status;
     if (remark) {
       complaint.remarks.push({ text: remark, addedBy: req.user.id, addedByName: req.user.name });
     }
+
+    // Record in status history
+    if (status && status !== previousStatus) {
+      complaint.statusHistory.push({
+        status,
+        changedBy: req.user.id,
+        changedByName: req.user.name,
+        remark: remark || ''
+      });
+    }
+
     await complaint.save();
 
     if (status === 'resolved') {
@@ -261,7 +285,8 @@ router.put('/:id/status', auth, roleCheck('operator'), async (req, res, next) =>
         module: complaint.category,
         title: `Complaint Resolved: ${complaint.title}`,
         message: `Resolved by ${req.user.name} in ${complaint.resolutionTimeMinutes || 0} minutes.`,
-        priority: 'low'
+        priority: 'low',
+        zone: complaint.zone
       });
     }
 
