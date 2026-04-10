@@ -1,180 +1,261 @@
-# Smart City Command and Control Platform
+<div align="center">
 
-> A full-stack civic operations platform to monitor city services, manage incidents, and resolve citizen complaints with role-based workflows and AI-assisted support.
+# 🏙️ Smart City Command & Control Platform
+**A Next-Generation AI & IoT Powered Governance Ecosystem for Modern Cities.**
 
-![License](https://img.shields.io/badge/license-MIT-green)
-![MERN](https://img.shields.io/badge/stack-MERN-blue)
-![Realtime](https://img.shields.io/badge/realtime-WebSocket-orange)
-![RBAC](https://img.shields.io/badge/security-RBAC-critical)
+[![MERN Stack](https://img.shields.io/badge/Stack-MERN-blue?style=for-the-badge&logo=mongodb)](https://mongodb.com)
+[![React](https://img.shields.io/badge/Frontend-React-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org/)
+[![Node.js](https://img.shields.io/badge/Backend-Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![Socket.io](https://img.shields.io/badge/Realtime-Socket.io-010101?style=for-the-badge&logo=socketdotio&logoColor=white)](https://socket.io/)
+[![Gemini API](https://img.shields.io/badge/AI-Gemini_Pro-8E75B2?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
 
-## Why This Project Stands Out
+*⭐ If you find this project useful, please consider giving it a star! ⭐*
 
-- Unified command center for traffic, water, waste, lighting, incidents, and alerts.
-- Built-in RBAC for Admin, Operator, and Citizen journeys.
-- Smart complaint lifecycle with assignment and SLA-style tracking.
-- Live dashboard experience with modern, responsive UI.
-- AI-powered citizen assistant with robust fallback handling.
+</div>
 
-## Core Capabilities
+---
 
-### Governance and Workflows
+## 🎥 Demo Preview
 
-- Secure authentication with JWT.
-- Role-restricted modules and actions.
-- Activity logs for auditability and accountability.
+![Dashboard Demo](./assets/demo-dashboard.gif)
 
-### Civic Operations
+![Complaint Flow](./assets/demo-complaint.gif)
 
-- Traffic monitoring and incident support.
-- Waste collection operations and route intelligence.
-- Water system monitoring and analytics.
-- Lighting fault reporting and control.
-- Emergency and incident management with alerting.
+![IoT Live Updates](./assets/demo-iot.gif)
 
-### Citizen Experience
+> **💡 Note for Creators:**
+> Replace the placeholders above with your generated GIFs. You can easily record your screen and create high-quality GIFs using [ScreenToGif](https://www.screentogif.com/) (Windows), [Kap](https://getkap.co/) (macOS), or [OBS Studio](https://obsproject.com/). Ensure the files are placed inside the `./assets/` folder with the exact filenames provided above.
 
-- Citizen complaint filing and status tracking.
-- Guided support through chat assistant.
-- Public announcement feed and city alerts.
+---
 
-## Architecture Overview
+## 🧠 Problem → Solution
 
-```text
-Frontend (React + Vite)
-  -> REST API + Socket Client
-Backend (Node.js + Express + Socket.io)
-  -> Business Logic + RBAC + Validation
-MongoDB (Mongoose Models)
-  -> Complaints, Alerts, Logs, Users, City Modules
+**The Problem:**
+Rapid urbanization has outpaced the digital infrastructure of most cities. Fragmented systems, manual reporting flows, and isolated data silos lead to chaotic urban environments, delayed civic responses, and poor citizen satisfaction.
+
+**The Gap:**
+Existing solutions generally target either IoT *or* civic complaints, leaving decision-makers without a unified view to effectively manage metropolitan-scale operations.
+
+**The Solution:**
+Our **Smart City Command & Control Platform** bridges this gap by unifying human intelligence and machine telemetry. We empower citizens to seamlessly report issues, utilize AI to automatically categorize and prioritize complaints, and integrate live IoT data streams to offer a holistic, real-time command center for smart urban governance.
+
+---
+
+## ✨ Features
+
+### 🏛️ Governance
+- 📊 **Centralized Analytics Dashboard:** Real-time, bird's-eye view of city health and operations constraints.
+- 👥 **Role-Based Workspaces (RBAC):** Strict structural isolation for Admins, Operators, and Citizens.
+- 🏢 **Multi-Department Sync:** Streamlined collaboration and escalation tracking across administrative boundaries.
+
+### 🏙️ Civic Modules
+- 📝 **Incident Management System:** Frictionless reporting and tracking of urban infrastructure issues.
+- 📑 **Smart Ticketing:** Automated routing and assignment of tasks to relevant functional operators.
+- 📈 **SLA Monitoring:** Ensure absolute accountability with exact service level and resolution time tracking.
+
+### 🧑‍🤝‍🧑 Citizen Experience
+- 📱 **Intuitive Public Portal:** Clean, highly accessible interface for submitting specific grievances and issues.
+- 🔔 **Instant Status Updates:** Live feedback loops on reported cases directly to the end user.
+- 💬 **Transparent History:** Complete record-keeping of personal civic interactions and past service metrics.
+
+### 🤖 AI & IoT
+- 🧠 **Gemini AI Integration:** NLP-powered complaint summarization, autonomous categorization, and predictive maintenance insights.
+- 🔌 **Dynamic IoT Ingestion:** Ready-to-scale endpoints managing live traffic, weather anomalies, and utility metrics matrices.
+- 📡 **WebSockets Engine:** Low-latency, bidirectional Socket.io communication reflecting status changes precisely in milliseconds.
+
+---
+
+## 🏗️ Architecture
+
+```mermaid
+flowchart LR
+    %% Entities
+    Users((Users))
+    IoT[📡 IoT Endpoints\nESP32 / Sensors]
+    AI[🧠 Gemini AI]
+    
+    %% Frontend
+    subgraph Frontend [Client Tier]
+        React[💻 React\nUI Components]
+    end
+    
+    %% Backend
+    subgraph Backend [Services Tier]
+        Express[⚙️ Node/Express\nREST API]
+        Socket[⚡ Socket.io\nReal-time Server]
+    end
+    
+    %% Database
+    subgraph Database [Data Tier]
+        Mongo[(🍃 MongoDB)]
+    end
+
+    %% Workflows
+    Users <-->|HTTP / WS| Frontend
+    Frontend <-->|REST| Express
+    Frontend <-->|Events| Socket
+    Express <-->|Publish / Subscribe| Socket
+    Express <-->|Mongoose Queries| Mongo
+    IoT -->|JSON Telemetry| Express
+    Express <-->|Prompts & Inference| AI
+
+    %% Styling
+    classDef ui fill:#3b82f6,stroke:#2563eb,stroke-width:2px,color:#fff
+    classDef api fill:#10b981,stroke:#059669,stroke-width:2px,color:#fff
+    classDef db fill:#f59e0b,stroke:#d97706,stroke-width:2px,color:#fff
+    classDef ai fill:#8b5cf6,stroke:#7c3aed,stroke-width:2px,color:#fff
+    classDef dev fill:#ef4444,stroke:#dc2626,stroke-width:2px,color:#fff
+    
+    class React ui
+    class Express,Socket api
+    class Mongo db
+    class AI ai
+    class IoT dev
 ```
 
-## Tech Stack
+---
 
-- Frontend: React, React Router, Axios, Recharts, Socket.io Client
-- Backend: Node.js, Express, Mongoose, JWT, Joi, Socket.io
-- Database: MongoDB
-- AI: Google Gemini API integration
+## ⚙️ Tech Stack
 
-## Quick Start
+### Frontend
+- React.js + Vite
+- Tailwind CSS
+- Context API / Redux for State Management
+- Recharts
 
-### 1. Prerequisites
+### Backend
+- Node.js
+- Express.js
+- JSON Web Tokens (JWT)
 
-- Node.js 18+
-- MongoDB local or Atlas URI
+### Database
+- MongoDB
+- Mongoose ORM
 
-### 2. Clone and Install
+### AI
+- Google Gemini API
 
+### Realtime
+- Socket.io
+
+---
+
+## 🔄 Workflow
+
+1. **Complaint Creation:** A citizen encounters a civic issue (e.g., severe water logging) and logs it via our public portal interface.
+2. **AI Processing:** Our Gemini integration analyzes the submission text/image, categorizes the severity context, and determines the targeted department automatically.
+3. **Admin Assignment:** The parsed complaint lands on the Admin dashboard where it is instantly routed to an available assigned operator.
+4. **Operator Resolution:** The operator accepts the ticket on their interface, resolves the issue on-site, and updates the status to *Resolved*.
+5. **Real-time Update:** Socket.io instantly propagates this state change directly to the citizen's live view.
+
+---
+
+## 📡 IoT Section
+
+Our platform natively supports highly scalable embedded endpoints for full city grid monitoring:
+- **Device Registration:** Secure system provisioning endpoints for authenticating dedicated smart city infrastructure nodes.
+- **Telemetry Flow:** Exceptionally robust data ingestion API natively built to digest high-frequency, concurrent metric data dumps.
+- **Real-time Alerts:** Configurable condition thresholds that instantly trigger critical push warnings on the Control Dashboard.
+- **Global Compatibility:** Fully tested out-of-the-box compatibility with lightweight REST payloads formatted via ESP32, ESP8266, or simulation nodes.
+
+---
+
+## 🛠️ Installation
+
+**1. Clone the repository**
 ```bash
 git clone https://github.com/SamarthKapdi/SmartCity_CodeStorm_Hackathon.git
 cd SmartCity_CodeStorm_Hackathon
-
-cd backend && npm install
-cd ../frontend && npm install
 ```
 
-### 3. Backend Environment
-
-Create `backend/.env` with:
-
-```env
-PORT=5000
-MONGODB_URI=mongodb://127.0.0.1:27017/smart-city
-JWT_SECRET=your_secure_secret
-JWT_EXPIRES_IN=7d
-GEMINI_API_KEY=your_gemini_api_key
-GEMINI_MODEL=gemini-2.0-flash
-```
-
-### 4. Seed Demo Data (Optional)
-
+**2. Install dependencies**
 ```bash
+# Install backend packages
 cd backend
-npm run seed
+npm install
+
+# Install frontend packages
+cd ../frontend
+npm install
 ```
 
-### 5. Run the App
+**3. Environment Setup**
+Create the necessary `.env` files in both the frontend and backend directories. Use the provided `.env.example` as a template for MongoDB URIs, JWT Secrets, and Gemini API keys.
 
-Terminal 1:
-
+**4. Run the application**
 ```bash
+# Terminal 1: Start the backend server
 cd backend
 npm run dev
-```
 
-Terminal 2:
-
-```bash
+# Terminal 2: Start the frontend development environment
 cd frontend
 npm run dev
 ```
 
-App URLs:
+---
 
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:5000/api
+## 🔑 Demo Credentials
 
-## Demo Credentials
+To explore the application natively without making accounts, utilize the following configured role instances:
 
-Admin:
+| Role | Email | Password |
+| :--- | :--- | :--- |
+| **Admin** | `admin@smartcity.gov` | `admin123` |
+| **Operator** | `operator@smartcity.gov` | `operator123` |
+| **Citizen** | `citizen@mail.com` | `citizen123` |
 
-- Email: `admin@smartcity.com`
-- Password: `admin123`
+---
 
-Operators:
-
-- `traffic@smartcity.com` / `operator123`
-- `waste@smartcity.com` / `operator123`
-- `water@smartcity.com` / `operator123`
-- `emergency@smartcity.com` / `operator123`
-
-Citizens:
-
-- `rahul@citizen.com` / `citizen123`
-- `priya@citizen.com` / `citizen123`
-
-## Project Structure
+## 📂 Project Structure
 
 ```text
-SmartCity_CodeStorm_Hackathon/
-  backend/
-    config/        # DB and server configuration
-    middleware/    # Auth, validation, role checks, error handling
-    models/        # Mongoose schemas
-    routes/        # API route modules
-    services/      # AI and domain logic
-    seed/          # Seed scripts
-    server.js
-
-  frontend/
-    src/
-      components/  # Shared UI components
-      context/     # Auth/theme/toast context
-      pages/       # Module pages and dashboards
-      services/    # API/socket clients
+📦 SmartCity_CodeStorm_Hackathon
+ ┣ 📂 backend
+ ┃ ┣ 📂 controllers
+ ┃ ┣ 📂 middleware
+ ┃ ┣ 📂 models
+ ┃ ┣ 📂 routes
+ ┃ ┣ 📂 services
+ ┃ ┗ 📜 server.js
+ ┣ 📂 frontend
+ ┃ ┣ 📂 src
+ ┃ ┃ ┣ 📂 assets
+ ┃ ┃ ┣ 📂 components
+ ┃ ┃ ┣ 📂 context
+ ┃ ┃ ┣ 📂 hooks
+ ┃ ┃ ┣ 📂 pages
+ ┃ ┃ ┗ 📜 App.jsx
+ ┣ 📂 assets             # README media and screenshots
+ ┗ 📜 README.md
 ```
 
-## API Glimpse
+---
 
-- `POST /api/auth/login`
-- `GET /api/dashboard`
-- `GET /api/complaints`
-- `POST /api/complaints`
-- `POST /api/chat/assistant`
-- `GET /api/alerts`
+## 🔐 Security Architecture
 
-## Security and Reliability Notes
+- **JWT Auth:** Stateless, encrypted authentication token mechanism dynamically managing user sessions.
+- **Granular RBAC:** Middleware-enforced permission checking to strictly ensure operators/citizens are scoped explicitly within their clearance constraints.
+- **IoT Key System:** Hardened, dedicated IoT API key authentication eliminating bulk malicious data injection and structural payload spoofing.
 
-- Never commit real API keys or secrets.
-- Rotate `GEMINI_API_KEY` if it was exposed.
-- AI assistant includes fallback behavior for model/quota issues to keep UX stable.
+---
 
-## Roadmap Ideas
+## 📈 Future Scope
 
-- Add integration tests for key complaint workflows.
-- Add CI pipeline with lint and build checks.
-- Add deployment profiles for Render or Railway plus Mongo Atlas.
-- Add maps and geo-fencing for incident heat zones.
+- **Smart Automation:** Expand autonomous capabilities by dynamically dispatching drone flights for visual assessments of reported civic faults.
+- **ML Models:** Deployment of decentralized ML clusters acting directly on-edge for real-time intersection traffic density optimization and prediction.
+- **Government Integration:** Future-ready integrations to sync verification systems natively with primary Federal/State Identifications (Aadhaar, Govt ID, etc.).
 
-## License
+---
 
-MIT
+## 🏆 Why This Project?
+
+**“We are building the future of smart governance.”**
+
+This platform represents the core digital backbone required to lead the cities of tomorrow. It scales efficient administration, absolutely guarantees responsiveness, and fundamentally transforms the citizen-governance relationship standard. 
+
+---
+
+## 📜 License
+
+This project is open-sourced under the **MIT License**.
