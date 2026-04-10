@@ -15,13 +15,7 @@
 
 ---
 
-## 🎥 Demo Preview
 
-![Dashboard Demo](./assets/demo-dashboard.gif)
-
-![Complaint Flow](./assets/demo-complaint.gif)
-
-![IoT Live Updates](./assets/demo-iot.gif)
 
 > **💡 Note for Creators:**
 > Replace the placeholders above with your generated GIFs. You can easily record your screen and create high-quality GIFs using [ScreenToGif](https://www.screentogif.com/) (Windows), [Kap](https://getkap.co/) (macOS), or [OBS Studio](https://obsproject.com/). Ensure the files are placed inside the `./assets/` folder with the exact filenames provided above.
