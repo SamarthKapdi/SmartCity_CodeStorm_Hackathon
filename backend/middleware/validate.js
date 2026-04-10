@@ -14,6 +14,15 @@ const validate = (schema) => {
         return acc;
       }, {});
 
+      if (req.originalUrl?.startsWith('/api/auth/')) {
+        console.warn('[AUTH][VALIDATION_FAILED]', {
+          path: req.originalUrl,
+          method: req.method,
+          email: req.body?.email,
+          fieldErrors,
+        });
+      }
+
       return res.status(400).json({
         success: false,
         message: 'Validation failed.',

@@ -5,6 +5,15 @@ const API_BASE =
   import.meta.env.VITE_API_URL ||
   'http://localhost:5000/api'
 
+const AUTH_DEBUG = import.meta.env.VITE_AUTH_DEBUG === 'true'
+
+if (AUTH_DEBUG) {
+  console.info('[AUTH][CONFIG]', {
+    apiBase: API_BASE,
+    socketUrl: import.meta.env.VITE_SOCKET_URL,
+  })
+}
+
 const api = axios.create({
   baseURL: API_BASE,
   headers: { 'Content-Type': 'application/json' },
@@ -16,6 +25,14 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
+
+  if (AUTH_DEBUG && config.url?.startsWith('/auth/')) {
+    console.info('[AUTH][REQUEST]', {
+      method: config.method,
+      url: `${config.baseURL || ''}${config.url}`,
+    })
+  }
+
   return config
 })
 
@@ -23,7 +40,28 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
+    const requestUrl = error.config?.url || ''
+    const isLoginOrRegister = /\/auth\/(login|register)$/.test(requestUrl)
+    const fullUrl = `${error.config?.baseURL || ''}${requestUrl}`
+
+    if (!error.response) {
+      console.error('[AUTH][NETWORK_ERROR]', {
+        url: fullUrl,
+        message: error.message,
+        code: error.code,
+      })
+    }
+
+    if (requestUrl.startsWith('/auth/') || AUTH_DEBUG) {
+      console.error('[AUTH][RESPONSE_ERROR]', {
+        url: fullUrl,
+        status: error.response?.status,
+        message: error.response?.data?.message || error.message,
+        data: error.response?.data,
+      })
+    }
+
+    if (error.response && error.response.status === 401 && !isLoginOrRegister) {
       localStorage.removeItem('smartcity_token')
       localStorage.removeItem('smartcity_user')
       window.location.href = '/login'

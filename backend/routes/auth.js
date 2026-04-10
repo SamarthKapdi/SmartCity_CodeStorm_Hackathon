@@ -8,6 +8,14 @@ const validate = require('../middleware/validate');
 const { registerSchema, loginSchema, createUserSchema } = require('../validations/authSchemas');
 const router = express.Router();
 
+const getClientIp = (req) => {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (typeof forwarded === 'string' && forwarded.length > 0) {
+    return forwarded.split(',')[0].trim();
+  }
+  return req.ip;
+};
+
 // POST /api/auth/register — public registration defaults to 'user' role
 router.post('/register', validate(registerSchema), async (req, res, next) => {
   try {
@@ -53,18 +61,24 @@ router.post('/register', validate(registerSchema), async (req, res, next) => {
 router.post('/login', validate(loginSchema), async (req, res, next) => {
   try {
     const { email, password } = req.body;
+    const normalizedEmail = String(email || '').trim().toLowerCase();
+    const clientIp = getClientIp(req);
+    console.info(`[AUTH][LOGIN_ATTEMPT] email=${normalizedEmail || 'missing'} ip=${clientIp}`);
 
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ email: normalizedEmail }).select('+password');
     if (!user) {
+      console.warn(`[AUTH][LOGIN_FAILED] reason=user_not_found email=${normalizedEmail} ip=${clientIp}`);
       return res.status(401).json({ success: false, message: 'Invalid email or password.' });
     }
 
     if (!user.isActive) {
+      console.warn(`[AUTH][LOGIN_FAILED] reason=inactive_account email=${normalizedEmail} userId=${user._id} ip=${clientIp}`);
       return res.status(401).json({ success: false, message: 'Account has been deactivated.' });
     }
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
+      console.warn(`[AUTH][LOGIN_FAILED] reason=invalid_password email=${normalizedEmail} userId=${user._id} ip=${clientIp}`);
       return res.status(401).json({ success: false, message: 'Invalid email or password.' });
     }
 
@@ -78,6 +92,8 @@ router.post('/login', validate(loginSchema), async (req, res, next) => {
       details: `${user.role} logged in`
     });
 
+    console.info(`[AUTH][LOGIN_SUCCESS] userId=${user._id} role=${user.role} email=${normalizedEmail} ip=${clientIp}`);
+
     res.json({
       success: true,
       data: {
@@ -86,6 +102,11 @@ router.post('/login', validate(loginSchema), async (req, res, next) => {
       }
     });
   } catch (error) {
+    console.error('[AUTH][LOGIN_ERROR]', {
+      email: String(req.body?.email || '').trim().toLowerCase(),
+      ip: getClientIp(req),
+      message: error.message,
+    });
     next(error);
   }
 });

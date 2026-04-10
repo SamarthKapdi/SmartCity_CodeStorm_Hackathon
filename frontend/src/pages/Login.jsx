@@ -10,6 +10,7 @@ const Login = () => {
   const [email, setEmail] = useState('admin@smartcity.com');
   const [password, setPassword] = useState('admin123');
   const [error, setError] = useState('');
+  const [errorDetails, setErrorDetails] = useState([]);
   const [loading, setLoading] = useState(false);
   const { login, register } = useAuth();
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setErrorDetails([]);
     setLoading(true);
     try {
       if (isRegister) {
@@ -26,7 +28,26 @@ const Login = () => {
       }
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || (isRegister ? 'Registration failed.' : 'Login failed.'));
+      const apiBase = import.meta.env.VITE_BACKEND_URI || import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const networkMessage = `Backend unreachable (${apiBase}). Check VITE_BACKEND_URI and backend CORS_ORIGINS.`;
+      const message = err.response?.data?.message || (!err.response ? networkMessage : (isRegister ? 'Registration failed.' : 'Login failed.'));
+      const fieldErrors = err.response?.data?.fieldErrors || {};
+      const details = Object.values(fieldErrors);
+
+      if (!err.response) {
+        details.push(`Network: ${err.message}`);
+      }
+
+      console.error('[AUTH][UI_LOGIN_ERROR]', {
+        mode: isRegister ? 'register' : 'login',
+        status: err.response?.status,
+        apiBase,
+        message,
+        fieldErrors,
+      });
+
+      setError(message);
+      setErrorDetails(details);
     } finally {
       setLoading(false);
     }
@@ -35,6 +56,7 @@ const Login = () => {
   const switchMode = () => {
     setIsRegister(!isRegister);
     setError('');
+    setErrorDetails([]);
     if (!isRegister) {
       setEmail('');
       setPassword('');
@@ -76,7 +98,16 @@ const Login = () => {
         {error && (
           <div className="login-error">
             <AlertCircle size={16} />
-            <span>{error}</span>
+            <div>
+              <span>{error}</span>
+              {errorDetails.length > 0 && (
+                <ul style={{ margin: '0.35rem 0 0 1rem', padding: 0 }}>
+                  {errorDetails.map((detail, index) => (
+                    <li key={index} style={{ fontSize: '0.8rem', lineHeight: 1.35 }}>{detail}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
         )}
 

@@ -59,12 +59,40 @@ app.use(compression())
 
 // CORS — configured from env
 const corsOrigins = process.env.CORS_ORIGINS
-  ? process.env.CORS_ORIGINS.split(',').map((s) => s.trim())
+  ? process.env.CORS_ORIGINS.split(',').map((s) => s.trim()).filter(Boolean)
   : ['http://localhost:5173', 'http://localhost:3000']
+
+const isOriginAllowed = (origin) => {
+  if (!origin) return true
+
+  return corsOrigins.some((allowedOrigin) => {
+    if (allowedOrigin === '*') return true
+    if (allowedOrigin === origin) return true
+
+    if (allowedOrigin.startsWith('*.')) {
+      try {
+        const { hostname } = new URL(origin)
+        const suffix = allowedOrigin.slice(1)
+        return hostname.endsWith(suffix)
+      } catch {
+        return false
+      }
+    }
+
+    return false
+  })
+}
 
 app.use(
   cors({
-    origin: corsOrigins,
+    origin: (origin, callback) => {
+      if (isOriginAllowed(origin)) {
+        return callback(null, true)
+      }
+
+      console.warn(`[CORS] Blocked origin: ${origin}`)
+      return callback(new Error(`CORS blocked for origin: ${origin}`))
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   })
