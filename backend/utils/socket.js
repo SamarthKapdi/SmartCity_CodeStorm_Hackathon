@@ -46,11 +46,15 @@ module.exports = {
 
       // Clients can join specific rooms
       socket.on('join_room', (room) => {
+        if (!room || typeof room !== 'string') return
+
         // Validate room names to prevent abuse
-        const allowedPrefixes = ['iot', 'alerts', 'emergency', 'complaints', 'device:', 'zone:', 'role:']
+        const allowedPrefixes = ['iot', 'alerts', 'emergency', 'complaints', 'device:', 'zone:', 'role:', 'user:']
         const isAllowed = allowedPrefixes.some((prefix) => room === prefix || room.startsWith(prefix))
         if (isAllowed) {
           socket.join(room)
+        } else {
+          console.warn(`⚠️ Rejected room join attempt: ${room}`)
         }
       })
 

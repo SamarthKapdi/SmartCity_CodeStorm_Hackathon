@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { alertAPI } from '../services/api';
+import socketService from '../services/socket';
 import {
   Bell, Check, CheckCheck, Trash2, RefreshCw,
   Clock, AlertTriangle, Info, Zap, TrendingUp
@@ -39,6 +40,18 @@ const Alerts = () => {
   };
 
   useEffect(() => { fetchData(); }, [filter]);
+
+  useEffect(() => {
+    const onNotification = () => {
+      fetchData();
+    };
+
+    socketService.on('notification:new', onNotification);
+
+    return () => {
+      socketService.off('notification:new', onNotification);
+    };
+  }, [filter.module, filter.type]);
 
   const handleMarkRead = async (id) => {
     try {

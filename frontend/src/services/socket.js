@@ -6,20 +6,35 @@ class SocketService {
   constructor() {
     this.socket = null
     this.listeners = new Map()
+    this.joinedRooms = new Set()
+    this.activeToken = null
   }
 
-  connect() {
-    if (this.socket?.connected) return
+  connect(token) {
+    const authToken = token || localStorage.getItem('smartcity_token') || null
+
+    if (this.socket?.connected && this.activeToken === authToken) return
+
+    if (this.socket && this.activeToken !== authToken) {
+      this.socket.disconnect()
+      this.socket = null
+    }
+
+    this.activeToken = authToken
 
     this.socket = io(SOCKET_URL, {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 2000,
+      auth: authToken ? { token: authToken } : undefined,
     })
 
     this.socket.on('connect', () => {
       console.log('🔗 WebSocket connected:', this.socket.id)
+      this.joinedRooms.forEach((room) => {
+        this.socket.emit('join_room', room)
+      })
     })
 
     this.socket.on('disconnect', (reason) => {
@@ -39,6 +54,8 @@ class SocketService {
   }
 
   joinRoom(room) {
+    if (!room || typeof room !== 'string') return
+    this.joinedRooms.add(room)
     if (this.socket?.connected) {
       this.socket.emit('join_room', room)
     }

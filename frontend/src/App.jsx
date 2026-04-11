@@ -1,7 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { ToastProvider } from './context/ToastContext'
+import { useToast } from './context/ToastContext'
+import socketService from './services/socket'
 import Layout from './components/Layout/Layout'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
@@ -215,12 +218,41 @@ const AppRoutes = () => {
   )
 }
 
+const RealtimeNotificationBridge = () => {
+  const { user, token } = useAuth()
+  const toast = useToast()
+
+  useEffect(() => {
+    if (!user || !token) return
+
+    socketService.connect(token)
+    if (user.id) socketService.joinRoom(`user:${user.id}`)
+    if (user.role) socketService.joinRoom(`role:${user.role}`)
+    if (user.zone) socketService.joinRoom(`zone:${user.zone}`)
+
+    const onNotification = (payload) => {
+      const alert = payload?.alert
+      if (!alert?.title) return
+      toast.info(`🔔 ${alert.title}`)
+    }
+
+    socketService.on('notification:new', onNotification)
+
+    return () => {
+      socketService.off('notification:new', onNotification)
+    }
+  }, [user?.id, user?.role, user?.zone, token, toast])
+
+  return null
+}
+
 function App() {
   return (
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
           <ToastProvider>
+            <RealtimeNotificationBridge />
             <AppRoutes />
           </ToastProvider>
         </AuthProvider>

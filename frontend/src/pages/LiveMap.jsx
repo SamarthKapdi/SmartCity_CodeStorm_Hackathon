@@ -233,7 +233,7 @@ const LiveMap = () => {
       <div className="card" style={{ padding: 0, overflow: 'hidden', borderRadius: 'var(--radius-lg)', height: 'calc(100vh - 280px)', minHeight: 450 }}>
         <MapContainer center={AHMEDABAD_CENTER} zoom={12} style={{ height: '100%', width: '100%' }} scrollWheelZoom>
           <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
           />
           {allMarkers.length > 0 && <FitBounds markers={allMarkers} />}

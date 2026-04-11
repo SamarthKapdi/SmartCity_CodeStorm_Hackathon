@@ -79,9 +79,9 @@ const Complaints = () => {
   // WebSocket real-time listeners
   useEffect(() => {
     socketService.connect();
-    if (user?.id) socketService.joinRoom(user.id);
-    if (user?.role) socketService.joinRoom(user.role);
-    if (user?.department) socketService.joinRoom(user.department);
+    if (user?.id) socketService.joinRoom(`user:${user.id}`);
+    if (user?.role) socketService.joinRoom(`role:${user.role}`);
+    if (user?.zone) socketService.joinRoom(`zone:${user.zone}`);
 
     const onCreated = (data) => {
       toast.info(`📝 New complaint: ${data?.title || 'New complaint filed'}`);
