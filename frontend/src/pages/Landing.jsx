@@ -99,7 +99,7 @@ const Landing = () => {
           <button className="theme-toggle-nav" onClick={toggleTheme} aria-label="Toggle Theme">
             {isDark ? <Sun size={18} /> : <Moon size={18} />}
           </button>
-          <a href="#" className="btn btn-hero-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.4rem 1rem' }}>
+          <a href="https://drive.google.com/file/d/1l_ZRTtHSu3bq4TMgscdDKhFWY_bjWnRW/view?usp=sharing" className="btn btn-hero-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.4rem 1rem' }}>
             <Download size={14} /> Download App
           </a>
           <button className="btn btn-primary nav-cta" onClick={() => navigate('/login')}>
@@ -126,7 +126,7 @@ const Landing = () => {
             <a href="#team" onClick={() => setMobileMenuOpen(false)}>Team</a>
             <a href="#contact" onClick={() => setMobileMenuOpen(false)}>Contact</a>
             
-            <a href="#" className="btn btn-hero-outline mb-3" style={{ justifyContent: 'center' }}>
+            <a href="https://drive.google.com/file/d/1l_ZRTtHSu3bq4TMgscdDKhFWY_bjWnRW/view?usp=sharing" className="btn btn-hero-outline mb-3" style={{ justifyContent: 'center' }}>
               <Download size={16} /> Download App
             </a>
             <button className="btn btn-primary" onClick={() => navigate('/login')} style={{ justifyContent: 'center' }}>
@@ -155,7 +155,7 @@ const Landing = () => {
             <button className="btn btn-hero-primary" onClick={() => navigate('/login')}>
               <Zap size={16} /> Get Started <ArrowRight size={16} />
             </button>
-            <a href="#" className="btn btn-hero-outline">
+            <a href="https://drive.google.com/file/d/1l_ZRTtHSu3bq4TMgscdDKhFWY_bjWnRW/view?usp=sharing" className="btn btn-hero-outline">
               <Download size={16} /> Download App
             </a>
             <a href="#features" className="btn btn-hero-outline" style={{ border: 'none' }}>

@@ -34,14 +34,6 @@ const teamMembers = [
     icon: Megaphone,
     accent: 'from-green-500 to-green-700',
   },
-  {
-    name: 'Aditya Kapse',
-    role: 'Research & Documentation',
-    img: '/WhatsApp%20Image%202026-04-04%20at%202.07.54%20PM.jpeg',
-    linkedin: 'https://www.linkedin.com/in/adityakapse1991/',
-    icon: Brain,
-    accent: 'from-amber-500 to-amber-700',
-  },
 ];
 
 const fadeUp = {
