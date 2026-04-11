@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { emergencyAPI } from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
@@ -8,6 +9,8 @@ import {
   Shield, CheckCircle, User, Timer
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import LocationPickerModal from '../components/LocationPickerModal'
+import './EmergencyPage.css'
 
 const typeColors = {
   sos: '#ef4444', fire: '#f97316', medical: '#ec4899',
@@ -19,6 +22,7 @@ const EmergencyPage = () => {
   const [stats, setStats] = useState({})
   const [loading, setLoading] = useState(true)
   const [showSOS, setShowSOS] = useState(false)
+  const [showLocationPicker, setShowLocationPicker] = useState(false)
   const [filter, setFilter] = useState({ status: '' })
   const [sosForm, setSosForm] = useState({ type: 'sos', title: '', description: '', location: '', zone: 'central', priority: 'critical', coordinates: { lat: null, lng: null } })
   const { user, isAdmin, isOperator } = useAuth()
@@ -63,7 +67,15 @@ const EmergencyPage = () => {
       return
     }
     try {
-      await emergencyAPI.createSOS(sosForm)
+      const payload = {
+        ...sosForm,
+        coordinates: {
+          lat: sosForm.coordinates.lat === '' || sosForm.coordinates.lat === null ? null : Number(sosForm.coordinates.lat),
+          lng: sosForm.coordinates.lng === '' || sosForm.coordinates.lng === null ? null : Number(sosForm.coordinates.lng),
+        },
+      }
+
+      await emergencyAPI.createSOS(payload)
       addToast('🚨 SOS Alert Sent!', 'success')
       setShowSOS(false)
       setSosForm({ type: 'sos', title: '', description: '', location: '', zone: 'central', priority: 'critical', coordinates: { lat: null, lng: null } })
@@ -91,6 +103,18 @@ const EmergencyPage = () => {
     } catch (err) {
       addToast(err.response?.data?.message || 'Failed to resolve', 'error')
     }
+  }
+
+  const handlePickCoordinates = (selected) => {
+    if (!selected) return
+    setSosForm((prev) => ({
+      ...prev,
+      coordinates: {
+        lat: selected.lat.toFixed(6),
+        lng: selected.lng.toFixed(6),
+      },
+    }))
+    setShowLocationPicker(false)
   }
 
   if (loading) return <div className="loading-container" style={{ minHeight: '60vh' }}><div className="spinner" /></div>
@@ -198,13 +222,13 @@ const EmergencyPage = () => {
       )}
 
       {/* SOS Modal */}
-      {showSOS && (
+      {showSOS && typeof document !== 'undefined' && createPortal(
         <div className="modal-overlay" onClick={() => setShowSOS(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 550 }}>
+          <div className="modal-content emergency-sos-modal" onClick={(e) => e.stopPropagation()}>
             <h2 style={{ color: '#ef4444', display: 'flex', alignItems: 'center', gap: 8 }}>
               <AlertTriangle size={20} />Emergency SOS Alert
             </h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div className="emergency-sos-form-stack">
               <div className="input-group">
                 <label>Emergency Type</label>
                 <select value={sosForm.type} onChange={(e) => setSosForm({ ...sosForm, type: e.target.value })}>
@@ -221,7 +245,7 @@ const EmergencyPage = () => {
                 <label>Description *</label>
                 <textarea rows={3} value={sosForm.description} onChange={(e) => setSosForm({ ...sosForm, description: e.target.value })} placeholder="Describe the emergency..." />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="emergency-sos-two-col">
                 <div className="input-group">
                   <label>Location *</label>
                   <input value={sosForm.location} onChange={(e) => setSosForm({ ...sosForm, location: e.target.value })} placeholder="Address or landmark" />
@@ -235,6 +259,23 @@ const EmergencyPage = () => {
                   </select>
                 </div>
               </div>
+              <div className="input-group">
+                <label>Coordinates (optional)</label>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-sm"
+                    onClick={() => setShowLocationPicker(true)}
+                  >
+                    <MapPin size={13} /> Pick on Map
+                  </button>
+                  {sosForm.coordinates.lat !== null && sosForm.coordinates.lng !== null && (
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                      {sosForm.coordinates.lat}, {sosForm.coordinates.lng}
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
             <div className="modal-actions">
               <button className="btn btn-outline" onClick={() => setShowSOS(false)}>Cancel</button>
@@ -243,8 +284,17 @@ const EmergencyPage = () => {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
+
+      <LocationPickerModal
+        isOpen={showLocationPicker}
+        title="Pick emergency location"
+        initialCoordinates={sosForm.coordinates}
+        onClose={() => setShowLocationPicker(false)}
+        onConfirm={handlePickCoordinates}
+      />
     </div>
   )
 }

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
-import { mapAPI } from '../services/api'
+import { mapAPI, complaintAPI } from '../services/api'
 import { MapPin, Filter, RefreshCw, AlertTriangle, Wifi, MessageSquare, Siren } from 'lucide-react'
 import 'leaflet/dist/leaflet.css'
 
@@ -30,6 +30,48 @@ const icons = {
 
 const AHMEDABAD_CENTER = [23.03, 72.58]
 
+const ZONE_CENTERS = {
+  north: { lat: 23.08, lng: 72.58 },
+  south: { lat: 22.97, lng: 72.58 },
+  east: { lat: 23.03, lng: 72.64 },
+  west: { lat: 23.03, lng: 72.52 },
+  central: { lat: 23.03, lng: 72.58 },
+}
+
+const toNumberOrNull = (value) => {
+  const n = Number(value)
+  return Number.isFinite(n) ? n : null
+}
+
+const getStableOffset = (seed = '') => {
+  let hash = 0
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash << 5) - hash + seed.charCodeAt(i)
+    hash |= 0
+  }
+
+  const latOffset = ((hash % 11) - 5) * 0.0025
+  const lngOffset = (((Math.floor(hash / 11)) % 11) - 5) * 0.0025
+  return { latOffset, lngOffset }
+}
+
+const resolveComplaintCoordinates = (complaint) => {
+  const lat = toNumberOrNull(complaint?.coordinates?.lat)
+  const lng = toNumberOrNull(complaint?.coordinates?.lng)
+  if (lat !== null && lng !== null) {
+    return { lat, lng }
+  }
+
+  const zoneCenter = ZONE_CENTERS[complaint?.zone] || { lat: AHMEDABAD_CENTER[0], lng: AHMEDABAD_CENTER[1] }
+  const seed = `${complaint?._id || complaint?.title || complaint?.location || 'complaint'}`
+  const { latOffset, lngOffset } = getStableOffset(seed)
+
+  return {
+    lat: zoneCenter.lat + latOffset,
+    lng: zoneCenter.lng + lngOffset,
+  }
+}
+
 const FitBounds = ({ markers }) => {
   const map = useMap()
   useEffect(() => {
@@ -50,7 +92,23 @@ const LiveMap = () => {
   const fetchData = useCallback(async () => {
     try {
       const res = await mapAPI.getData(filter)
-      setData(res.data.data)
+      const payload = res.data?.data || {}
+
+      const shouldLoadComplaintFallback =
+        filter.types.split(',').includes('complaints') &&
+        (!payload.complaints || payload.complaints.length === 0)
+
+      if (shouldLoadComplaintFallback) {
+        const complaintRes = await complaintAPI.getAll(filter.zone ? { zone: filter.zone } : undefined)
+        payload.complaints = complaintRes.data?.data || []
+      }
+
+      setData({
+        complaints: payload.complaints || [],
+        devices: payload.devices || [],
+        incidents: payload.incidents || [],
+        emergencies: payload.emergencies || [],
+      })
     } catch (err) {
       console.error('Map data error:', err)
     } finally {
@@ -71,9 +129,8 @@ const LiveMap = () => {
 
   if (showTypes.includes('complaints') && data.complaints) {
     data.complaints.forEach((c) => {
-      if (c.coordinates?.lat) {
-        allMarkers.push({ lat: c.coordinates.lat, lng: c.coordinates.lng, type: 'complaint', data: c })
-      }
+      const coordinates = resolveComplaintCoordinates(c)
+      allMarkers.push({ lat: coordinates.lat, lng: coordinates.lng, type: 'complaint', data: c })
     })
   }
   if (showTypes.includes('devices') && data.devices) {
@@ -190,6 +247,11 @@ const LiveMap = () => {
                   <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: 4 }}>
                     {marker.data.location} • {marker.data.zone}
                   </div>
+                  {marker.data.description && (
+                    <div style={{ fontSize: '0.78rem', color: '#cbd5e1', marginBottom: 6, lineHeight: 1.35 }}>
+                      {marker.data.description}
+                    </div>
+                  )}
                   {marker.data.status && (
                     <span className={`badge badge-${marker.data.status}`} style={{ fontSize: '0.7rem' }}>
                       {marker.data.status}
@@ -203,6 +265,16 @@ const LiveMap = () => {
                   {marker.data.category && (
                     <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: 4 }}>
                       Category: {marker.data.category}
+                    </div>
+                  )}
+                  {marker.data.createdAt && (
+                    <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: 2 }}>
+                      Filed: {new Date(marker.data.createdAt).toLocaleString()}
+                    </div>
+                  )}
+                  {marker.data.deadline && (
+                    <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: 2 }}>
+                      Deadline: {new Date(marker.data.deadline).toLocaleString()}
                     </div>
                   )}
                   {marker.data.type && marker.type !== 'complaint' && (

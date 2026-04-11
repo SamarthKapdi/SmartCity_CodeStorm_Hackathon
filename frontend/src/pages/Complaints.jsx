@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { complaintAPI, authAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -13,6 +14,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
+import LocationPickerModal from '../components/LocationPickerModal';
 import './ModulePage.css';
 import './Complaints.css';
 
@@ -26,11 +28,20 @@ const Complaints = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState({ status: '', priority: '', category: '' });
   const [showModal, setShowModal] = useState(false);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(null);
   const [showStatusModal, setShowStatusModal] = useState(null);
   const [operators, setOperators] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
-  const [form, setForm] = useState({ title: '', description: '', category: 'traffic', location: '', zone: 'central', image: null });
+  const [form, setForm] = useState({
+    title: '',
+    description: '',
+    category: 'traffic',
+    location: '',
+    zone: 'central',
+    coordinates: { lat: '', lng: '' },
+    image: null,
+  });
   const [formErrors, setFormErrors] = useState({});
   const [imagePreview, setImagePreview] = useState(null);
   const [assignForm, setAssignForm] = useState({ assignedTo: '', priority: 'medium', deadline: '' });
@@ -115,10 +126,20 @@ const Complaints = () => {
       formData.append('category', form.category);
       formData.append('location', form.location);
       formData.append('zone', form.zone);
+      if (form.coordinates?.lat !== '') formData.append('lat', form.coordinates.lat);
+      if (form.coordinates?.lng !== '') formData.append('lng', form.coordinates.lng);
       if (form.image) formData.append('image', form.image);
       await complaintAPI.create(formData);
       setShowModal(false);
-      setForm({ title: '', description: '', category: 'traffic', location: '', zone: 'central', image: null });
+      setForm({
+        title: '',
+        description: '',
+        category: 'traffic',
+        location: '',
+        zone: 'central',
+        coordinates: { lat: '', lng: '' },
+        image: null,
+      });
       setFormErrors({});
       setImagePreview(null);
       toast.success('Complaint submitted successfully!');
@@ -137,6 +158,18 @@ const Complaints = () => {
       setFormErrors((prev) => ({ ...prev, image: undefined }));
       setImagePreview(URL.createObjectURL(file));
     }
+  };
+
+  const handlePickCoordinates = (selected) => {
+    if (!selected) return;
+    setForm((prev) => ({
+      ...prev,
+      coordinates: {
+        lat: selected.lat.toFixed(6),
+        lng: selected.lng.toFixed(6),
+      },
+    }));
+    setShowLocationPicker(false);
   };
 
   // Admin: open assign modal
@@ -401,14 +434,14 @@ const Complaints = () => {
       {complaints.length === 0 && <div className="empty-state"><p>No complaints found</p></div>}
 
       {/* Create Complaint Modal (citizen) */}
-      {showModal && (
+      {showModal && typeof document !== 'undefined' && createPortal(
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 600 }}>
+          <div className="modal-content complaint-create-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header-row">
               <h2>File a Complaint</h2>
               <button className="btn btn-sm btn-outline" onClick={() => setShowModal(false)}><X size={14} /></button>
             </div>
-            <form onSubmit={handleCreate}>
+            <form className="complaint-create-form" onSubmit={handleCreate}>
               <div className="input-group">
                 <label>Title</label>
                 <input
@@ -423,7 +456,7 @@ const Complaints = () => {
                 />
                 {formErrors.title && <span className="field-error">{formErrors.title}</span>}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="complaint-form-two-col">
                 <div className="input-group">
                   <label>Category</label>
                   <select
@@ -472,6 +505,23 @@ const Complaints = () => {
                 {formErrors.location && <span className="field-error">{formErrors.location}</span>}
               </div>
               <div className="input-group">
+                <label>Coordinates (optional)</label>
+                <div className="complaint-coordinate-row">
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-sm"
+                    onClick={() => setShowLocationPicker(true)}
+                  >
+                    <MapPin size={13} /> Pick on Map
+                  </button>
+                  {form.coordinates.lat !== '' && form.coordinates.lng !== '' && (
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                      {form.coordinates.lat}, {form.coordinates.lng}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="input-group">
                 <label>Description</label>
                 <textarea
                   className={formErrors.description ? 'input-error' : ''}
@@ -509,8 +559,17 @@ const Complaints = () => {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
+
+      <LocationPickerModal
+        isOpen={showLocationPicker}
+        title="Pick complaint location"
+        initialCoordinates={form.coordinates}
+        onClose={() => setShowLocationPicker(false)}
+        onConfirm={handlePickCoordinates}
+      />
 
       {/* Assign Modal (admin) */}
       {showAssignModal && (

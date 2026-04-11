@@ -15,12 +15,10 @@ const mapController = {
       if (requestedTypes.includes('complaints')) {
         result.complaints = await Complaint.find({
           ...zoneFilter,
-          'coordinates.lat': { $ne: null },
-          status: { $ne: 'resolved' },
         })
-          .select('title category priority status location coordinates zone createdAt')
+          .select('title description category priority status location coordinates zone deadline createdAt')
           .sort({ createdAt: -1 })
-          .limit(200)
+          .limit(500)
       }
 
       if (requestedTypes.includes('devices')) {

@@ -9,6 +9,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell
 } from 'recharts';
+import LocationPickerModal from '../components/LocationPickerModal';
 import './ModulePage.css';
 
 const Traffic = () => {
@@ -17,7 +18,14 @@ const Traffic = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState({ zone: '', congestionLevel: '' });
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState({ location: '', zone: 'central', vehicleCount: 100, averageSpeed: 40 });
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [form, setForm] = useState({
+    location: '',
+    zone: 'central',
+    vehicleCount: 100,
+    averageSpeed: 40,
+    coordinates: { lat: '', lng: '' },
+  });
   const { isAdmin } = useAuth();
 
   const fetchData = async () => {
@@ -64,11 +72,36 @@ const Traffic = () => {
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
-      await trafficAPI.create(form);
+      const payload = {
+        ...form,
+        coordinates: {
+          lat: form.coordinates.lat === '' ? null : Number(form.coordinates.lat),
+          lng: form.coordinates.lng === '' ? null : Number(form.coordinates.lng),
+        },
+      };
+      await trafficAPI.create(payload);
       setShowModal(false);
-      setForm({ location: '', zone: 'central', vehicleCount: 100, averageSpeed: 40 });
+      setForm({
+        location: '',
+        zone: 'central',
+        vehicleCount: 100,
+        averageSpeed: 40,
+        coordinates: { lat: '', lng: '' },
+      });
       fetchData();
     } catch (err) { console.error(err); }
+  };
+
+  const handlePickCoordinates = (selected) => {
+    if (!selected) return;
+    setForm((prev) => ({
+      ...prev,
+      coordinates: {
+        lat: selected.lat.toFixed(6),
+        lng: selected.lng.toFixed(6),
+      },
+    }));
+    setShowLocationPicker(false);
   };
 
   if (loading) return <div className="loading-container"><div className="spinner" /></div>;
@@ -244,6 +277,23 @@ const Traffic = () => {
                 <label>Average Speed (km/h)</label>
                 <input type="number" value={form.averageSpeed} onChange={e => setForm(f => ({ ...f, averageSpeed: parseInt(e.target.value) || 0 }))} />
               </div>
+              <div className="input-group">
+                <label>Coordinates (optional)</label>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-sm"
+                    onClick={() => setShowLocationPicker(true)}
+                  >
+                    <MapPin size={13} /> Pick on Map
+                  </button>
+                  {form.coordinates.lat !== '' && form.coordinates.lng !== '' && (
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                      {form.coordinates.lat}, {form.coordinates.lng}
+                    </span>
+                  )}
+                </div>
+              </div>
               <div className="modal-actions">
                 <button type="button" className="btn btn-outline" onClick={() => setShowModal(false)}>Cancel</button>
                 <button type="submit" className="btn btn-primary">Create</button>
@@ -252,6 +302,14 @@ const Traffic = () => {
           </div>
         </div>
       )}
+
+      <LocationPickerModal
+        isOpen={showLocationPicker}
+        title="Pick traffic location"
+        initialCoordinates={form.coordinates}
+        onClose={() => setShowLocationPicker(false)}
+        onConfirm={handlePickCoordinates}
+      />
     </div>
   );
 };

@@ -6,6 +6,10 @@ const waterDataSchema = new mongoose.Schema({
     required: [true, 'Area is required'],
     trim: true
   },
+  coordinates: {
+    lat: { type: Number, default: null },
+    lng: { type: Number, default: null }
+  },
   zone: {
     type: String,
     required: true,
@@ -73,5 +77,6 @@ waterDataSchema.pre('save', function(next) {
 });
 
 waterDataSchema.index({ zone: 1, leakDetected: 1 });
+waterDataSchema.index({ 'coordinates.lat': 1, 'coordinates.lng': 1 });
 
 module.exports = mongoose.model('WaterData', waterDataSchema);

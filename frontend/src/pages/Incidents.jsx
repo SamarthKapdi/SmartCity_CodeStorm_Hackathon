@@ -8,6 +8,7 @@ import {
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip
 } from 'recharts';
+import LocationPickerModal from '../components/LocationPickerModal';
 import './ModulePage.css';
 
 const COLORS = ['#ef4444', '#f97316', '#f59e0b', '#3b82f6', '#8b5cf6', '#06b6d4'];
@@ -18,9 +19,10 @@ const Incidents = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState({ status: '', priority: '' });
   const [showModal, setShowModal] = useState(false);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [form, setForm] = useState({
     title: '', type: 'fire', location: '', zone: 'central',
-    priority: 'medium', description: ''
+    priority: 'medium', description: '', coordinates: { lat: '', lng: '' }
   });
   const { isAdmin } = useAuth();
 
@@ -47,9 +49,24 @@ const Incidents = () => {
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
-      await incidentAPI.create(form);
+      const payload = {
+        ...form,
+        coordinates: {
+          lat: form.coordinates.lat === '' ? null : Number(form.coordinates.lat),
+          lng: form.coordinates.lng === '' ? null : Number(form.coordinates.lng),
+        },
+      };
+      await incidentAPI.create(payload);
       setShowModal(false);
-      setForm({ title: '', type: 'fire', location: '', zone: 'central', priority: 'medium', description: '' });
+      setForm({
+        title: '',
+        type: 'fire',
+        location: '',
+        zone: 'central',
+        priority: 'medium',
+        description: '',
+        coordinates: { lat: '', lng: '' },
+      });
       fetchData();
     } catch (err) { console.error(err); }
   };
@@ -66,6 +83,18 @@ const Incidents = () => {
       await incidentAPI.delete(id);
       fetchData();
     } catch (err) { console.error(err); }
+  };
+
+  const handlePickCoordinates = (selected) => {
+    if (!selected) return;
+    setForm((prev) => ({
+      ...prev,
+      coordinates: {
+        lat: selected.lat.toFixed(6),
+        lng: selected.lng.toFixed(6),
+      },
+    }));
+    setShowLocationPicker(false);
   };
 
   if (loading) return <div className="loading-container"><div className="spinner" /></div>;
@@ -253,6 +282,23 @@ const Incidents = () => {
                 </select>
               </div>
               <div className="input-group">
+                <label>Coordinates (optional)</label>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-sm"
+                    onClick={() => setShowLocationPicker(true)}
+                  >
+                    <MapPin size={13} /> Pick on Map
+                  </button>
+                  {form.coordinates.lat !== '' && form.coordinates.lng !== '' && (
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                      {form.coordinates.lat}, {form.coordinates.lng}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="input-group">
                 <label>Priority</label>
                 <select value={form.priority} onChange={e => setForm(f => ({ ...f, priority: e.target.value }))}>
                   <option value="low">Low</option>
@@ -273,6 +319,14 @@ const Incidents = () => {
           </div>
         </div>
       )}
+
+      <LocationPickerModal
+        isOpen={showLocationPicker}
+        title="Pick incident location"
+        initialCoordinates={form.coordinates}
+        onClose={() => setShowLocationPicker(false)}
+        onConfirm={handlePickCoordinates}
+      />
     </div>
   );
 };

@@ -3,6 +3,8 @@ const Incident = require('../models/Incident');
 const ActivityLog = require('../models/ActivityLog');
 const auth = require('../middleware/auth');
 const roleCheck = require('../middleware/roleCheck');
+const validate = require('../middleware/validate');
+const { createIncidentSchema } = require('../validations/iotSchemas');
 const notificationService = require('../services/notificationService');
 const router = express.Router();
 
@@ -54,7 +56,7 @@ router.get('/stats', auth, async (req, res, next) => {
 });
 
 // POST /api/incidents - Create incident
-router.post('/', auth, async (req, res, next) => {
+router.post('/', auth, validate(createIncidentSchema), async (req, res, next) => {
   try {
     const incidentData = { ...req.body, createdBy: req.user.id };
     const incident = await Incident.create(incidentData);

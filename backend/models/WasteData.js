@@ -12,6 +12,10 @@ const wasteDataSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  coordinates: {
+    lat: { type: Number, default: null },
+    lng: { type: Number, default: null }
+  },
   zone: {
     type: String,
     required: true,
@@ -67,5 +71,6 @@ wasteDataSchema.pre('save', function(next) {
 });
 
 wasteDataSchema.index({ zone: 1, fillStatus: 1 });
+wasteDataSchema.index({ 'coordinates.lat': 1, 'coordinates.lng': 1 });
 
 module.exports = mongoose.model('WasteData', wasteDataSchema);

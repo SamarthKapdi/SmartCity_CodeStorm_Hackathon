@@ -12,6 +12,10 @@ const lightingDataSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  coordinates: {
+    lat: { type: Number, default: null },
+    lng: { type: Number, default: null }
+  },
   zone: {
     type: String,
     required: true,
@@ -60,5 +64,6 @@ const lightingDataSchema = new mongoose.Schema({
 
 lightingDataSchema.index({ zone: 1, status: 1 });
 lightingDataSchema.index({ faultDetected: 1 });
+lightingDataSchema.index({ 'coordinates.lat': 1, 'coordinates.lng': 1 });
 
 module.exports = mongoose.model('LightingData', lightingDataSchema);

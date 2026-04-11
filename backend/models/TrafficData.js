@@ -6,6 +6,10 @@ const trafficDataSchema = new mongoose.Schema({
     required: [true, 'Location is required'],
     trim: true
   },
+  coordinates: {
+    lat: { type: Number, default: null },
+    lng: { type: Number, default: null }
+  },
   zone: {
     type: String,
     required: true,
@@ -55,5 +59,6 @@ const trafficDataSchema = new mongoose.Schema({
 
 trafficDataSchema.index({ createdAt: -1 });
 trafficDataSchema.index({ zone: 1, congestionLevel: 1 });
+trafficDataSchema.index({ 'coordinates.lat': 1, 'coordinates.lng': 1 });
 
 module.exports = mongoose.model('TrafficData', trafficDataSchema);

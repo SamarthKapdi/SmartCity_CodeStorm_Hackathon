@@ -11,6 +11,31 @@ const { createComplaintSchema, assignComplaintSchema, updateStatusSchema } = req
 const { getIo } = require('../utils/socket');
 const router = express.Router();
 
+const parseCoordinateValue = (value) => {
+  if (value === undefined || value === null || value === '') return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const normalizeCoordinates = (req, res, next) => {
+  if (typeof req.body.coordinates === 'string') {
+    try {
+      req.body.coordinates = JSON.parse(req.body.coordinates);
+    } catch (error) {
+      req.body.coordinates = {};
+    }
+  }
+
+  const lat = parseCoordinateValue(req.body.lat ?? req.body.coordinates?.lat);
+  const lng = parseCoordinateValue(req.body.lng ?? req.body.coordinates?.lng);
+
+  if (lat !== null || lng !== null) {
+    req.body.coordinates = { lat, lng };
+  }
+
+  next();
+};
+
 // ──────────────────────────────────────────────
 // GET /api/complaints — role-scoped listing
 // ──────────────────────────────────────────────
@@ -149,15 +174,12 @@ router.get('/:id', auth, async (req, res, next) => {
 // ──────────────────────────────────────────────
 // POST /api/complaints — create (user only, with optional image)
 // ──────────────────────────────────────────────
-router.post('/', auth, roleCheck('user'), upload.single('image'), validate(createComplaintSchema), async (req, res, next) => {
+router.post('/', auth, roleCheck('user'), upload.single('image'), normalizeCoordinates, validate(createComplaintSchema), async (req, res, next) => {
   try {
     const { title, description, category, location, zone, priority, coordinates } = req.body;
 
     // Parse coordinates if stringified
-    let coords = {};
-    if (coordinates) {
-      try { coords = typeof coordinates === 'string' ? JSON.parse(coordinates) : coordinates; } catch (e) { /* ignore */ }
-    }
+    const coords = coordinates || {};
 
     const complaint = new Complaint({
       title, description, category, location,

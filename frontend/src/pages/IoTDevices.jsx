@@ -18,6 +18,7 @@ import {
 import { iotAPI } from '../services/api'
 import socketService from '../services/socket'
 import { useAuth } from '../context/AuthContext'
+import LocationPickerModal from '../components/LocationPickerModal'
 import './IoTDevices.css'
 
 const deviceTypes = [
@@ -37,6 +38,7 @@ const emptyForm = {
   type: 'custom',
   zone: 'central',
   location: '',
+  coordinates: { lat: '', lng: '' },
   firmwareVersion: '1.0.0',
   connectionType: 'socket',
   batteryLevel: 100,
@@ -74,6 +76,7 @@ const IoTDevices = () => {
   const [busy, setBusy] = useState('')
   const [message, setMessage] = useState('')
   const [events, setEvents] = useState([])
+  const [showLocationPicker, setShowLocationPicker] = useState(false)
   const [form, setForm] = useState(emptyForm)
 
   const appendEvent = (label, detail) => {
@@ -165,7 +168,14 @@ const IoTDevices = () => {
     setBusy('register')
     setMessage('')
     try {
-      const res = await iotAPI.registerDevice(form)
+      const payload = {
+        ...form,
+        coordinates: {
+          lat: form.coordinates.lat === '' ? null : Number(form.coordinates.lat),
+          lng: form.coordinates.lng === '' ? null : Number(form.coordinates.lng),
+        },
+      }
+      const res = await iotAPI.registerDevice(payload)
       const created = {
         ...res.data.data,
         connectionKey: res.data.connectionKey,
@@ -235,6 +245,18 @@ const IoTDevices = () => {
     } finally {
       setBusy('')
     }
+  }
+
+  const handlePickCoordinates = (selected) => {
+    if (!selected) return
+    setForm((prev) => ({
+      ...prev,
+      coordinates: {
+        lat: selected.lat.toFixed(6),
+        lng: selected.lng.toFixed(6),
+      },
+    }))
+    setShowLocationPicker(false)
   }
 
   const copyKey = async (value) => {
@@ -384,6 +406,23 @@ const IoTDevices = () => {
             />
           </div>
           <div className="input-group">
+            <label>Coordinates (optional)</label>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                onClick={() => setShowLocationPicker(true)}
+              >
+                <MapPin size={13} /> Pick on Map
+              </button>
+              {form.coordinates.lat !== '' && form.coordinates.lng !== '' && (
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                  {form.coordinates.lat}, {form.coordinates.lng}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="input-group">
             <label>Connection Mode</label>
             <select
               value={form.connectionType}
@@ -442,6 +481,15 @@ const IoTDevices = () => {
             </button>
           </div>
         </form>
+
+        <LocationPickerModal
+          isOpen={showLocationPicker}
+          title="Pick device location"
+          initialCoordinates={form.coordinates}
+          onClose={() => setShowLocationPicker(false)}
+          onConfirm={handlePickCoordinates}
+        />
+
         {message && <div className="iot-message">{message}</div>}
       </div>
 
@@ -509,6 +557,9 @@ const IoTDevices = () => {
               <span>
                 <MapPin size={12} /> {device.zone} ·{' '}
                 {device.location || 'No location'}
+                {device.coordinates?.lat != null && device.coordinates?.lng != null
+                  ? ` (${Number(device.coordinates.lat).toFixed(4)}, ${Number(device.coordinates.lng).toFixed(4)})`
+                  : ''}
               </span>
               <span>
                 <Radio size={12} /> {device.connectionType}

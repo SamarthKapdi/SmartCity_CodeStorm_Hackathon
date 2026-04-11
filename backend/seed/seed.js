@@ -14,6 +14,39 @@ const ActivityLog = require('../models/ActivityLog')
 const Complaint = require('../models/Complaint')
 
 const zones = ['north', 'south', 'east', 'west', 'central']
+const BASE_COORDINATES = { lat: 22.7388, lng: 75.8904 }
+const zoneCoordinateBias = {
+  north: { lat: 0.02, lng: 0 },
+  south: { lat: -0.02, lng: 0 },
+  east: { lat: 0, lng: 0.02 },
+  west: { lat: 0, lng: -0.02 },
+  central: { lat: 0, lng: 0 },
+}
+
+const toCoordinatePoint = (lat, lng) => ({
+  lat: Number(lat.toFixed(6)),
+  lng: Number(lng.toFixed(6)),
+})
+
+const getNearbyCoordinates = (zone = 'central', seed = 0, spread = 0.012) => {
+  const bias = zoneCoordinateBias[zone] || zoneCoordinateBias.central
+  const angle = ((seed * 37) % 360) * (Math.PI / 180)
+  const radius = spread * (0.35 + (seed % 5) * 0.15)
+
+  const lat =
+    BASE_COORDINATES.lat +
+    bias.lat +
+    Math.cos(angle) * radius +
+    (Math.random() - 0.5) * spread * 0.18
+
+  const lng =
+    BASE_COORDINATES.lng +
+    bias.lng +
+    Math.sin(angle) * radius +
+    (Math.random() - 0.5) * spread * 0.18
+
+  return toCoordinatePoint(lat, lng)
+}
 
 const trafficLocations = [
   { location: 'MG Road Junction', zone: 'central' },
@@ -163,8 +196,9 @@ const seed = async () => {
 
     // --- TRAFFIC DATA ---
     const congestionLevels = ['low', 'medium', 'high']
-    const trafficData = trafficLocations.map((loc) => ({
+    const trafficData = trafficLocations.map((loc, i) => ({
       ...loc,
+      coordinates: getNearbyCoordinates(loc.zone, i, 0.014),
       congestionLevel: congestionLevels[Math.floor(Math.random() * 3)],
       vehicleCount: Math.floor(Math.random() * 500) + 50,
       averageSpeed: Math.floor(Math.random() * 60) + 10,
@@ -186,6 +220,7 @@ const seed = async () => {
       return {
         binId: `BIN-${String(i + 1).padStart(3, '0')}`,
         ...loc,
+        coordinates: getNearbyCoordinates(loc.zone, i + 100, 0.016),
         fillLevel,
         wasteType: wasteTypes[Math.floor(Math.random() * wasteTypes.length)],
         collectionStatus: ['pending', 'scheduled', 'completed'][
@@ -204,11 +239,12 @@ const seed = async () => {
     console.log(`🗑️  Created ${wasteData.length} waste bins`)
 
     // --- WATER DATA ---
-    const waterData = waterAreas.map((area) => {
+    const waterData = waterAreas.map((area, i) => {
       const threshold = 5000
       const usage = Math.floor(Math.random() * 8000) + 1000
       return {
         ...area,
+        coordinates: getNearbyCoordinates(area.zone, i + 200, 0.013),
         usage,
         pressure: Math.floor(Math.random() * 40) + 40,
         threshold,
@@ -237,6 +273,7 @@ const seed = async () => {
           lightId: `SL-${zone[0].toUpperCase()}${String(lightCounter++).padStart(3, '0')}`,
           location: `${zone.charAt(0).toUpperCase() + zone.slice(1)} Zone Street ${i + 1}`,
           zone,
+          coordinates: getNearbyCoordinates(zone, lightCounter + 300, 0.018),
           status: Math.random() > 0.3 ? 'on' : 'off',
           autoMode: Math.random() > 0.2,
           faultDetected: hasFault,
@@ -262,6 +299,7 @@ const seed = async () => {
         type: 'traffic-sensor',
         zone: 'central',
         location: 'MG Road Junction',
+        coordinates: getNearbyCoordinates('central', 500, 0.008),
         status: 'online',
         connectionType: 'socket',
         connectionKey: 'TRAFFIC-CENTRAL-001',
@@ -282,6 +320,7 @@ const seed = async () => {
         type: 'waste-sensor',
         zone: 'north',
         location: 'Sector 1 Market',
+        coordinates: getNearbyCoordinates('north', 501, 0.008),
         status: 'online',
         connectionType: 'http',
         connectionKey: 'WASTE-NORTH-001',
@@ -298,6 +337,7 @@ const seed = async () => {
         type: 'water-meter',
         zone: 'central',
         location: 'Central Business District Pump House',
+        coordinates: getNearbyCoordinates('central', 502, 0.008),
         status: 'online',
         connectionType: 'mqtt',
         connectionKey: 'WATER-CENTRAL-001',
@@ -314,6 +354,7 @@ const seed = async () => {
         type: 'lighting-controller',
         zone: 'east',
         location: 'East Township Lane 3',
+        coordinates: getNearbyCoordinates('east', 503, 0.008),
         status: 'maintenance',
         connectionType: 'socket',
         connectionKey: 'LIGHT-EAST-001',
@@ -334,6 +375,7 @@ const seed = async () => {
         type: 'air-quality-sensor',
         zone: 'west',
         location: 'West Hills Monitoring Tower',
+        coordinates: getNearbyCoordinates('west', 504, 0.008),
         status: 'offline',
         connectionType: 'simulation',
         connectionKey: 'AIR-WEST-001',
@@ -376,6 +418,7 @@ const seed = async () => {
           ),
         type: incidentTypes[i % incidentTypes.length],
         location: `${zone.charAt(0).toUpperCase() + zone.slice(1)} Zone Area ${Math.floor(Math.random() * 10) + 1}`,
+        coordinates: getNearbyCoordinates(zone, i + 700, 0.016),
         zone,
         priority: priorities[Math.floor(Math.random() * priorities.length)],
         status,
@@ -492,6 +535,7 @@ const seed = async () => {
 
       const complaint = new Complaint({
         ...tmpl,
+        coordinates: getNearbyCoordinates(tmpl.zone, i + 900, 0.014),
         priority:
           tmpl.category === 'emergency' ? 'high' : complaintPriorities[i % 3],
         status,
